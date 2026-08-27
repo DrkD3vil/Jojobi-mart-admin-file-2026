@@ -31,7 +31,7 @@
         </nav>
 
         <!-- Header Section -->
-        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 p-6 mb-8 shadow-[var(--card-shadow)]">
+        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 p-6 mb-8 shadow-[var(--card-shadow)]" data-reveal>
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div class="flex-1">
                     <div class="flex items-center gap-3 mb-3">
@@ -46,16 +46,25 @@
                                 <span class="px-3 py-1 rounded-full text-sm font-medium bg-[var(--accent-color)]/10 text-[var(--accent-color)] font-mono">
                                     {{ $privilege->slug }}
                                 </span>
+                                @if($privilege->access_key)
+                                    <span class="px-3 py-1 rounded-full text-sm font-medium bg-[var(--success)]/10 text-[var(--success)] font-mono" title="Assigning this privilege to a role auto-grants this access key">
+                                        {{ $privilege->access_key }}
+                                    </span>
+                                @endif
                             </div>
                             <p class="text-[var(--text-secondary)] mt-2">Privilege details and usage information</p>
                         </div>
                     </div>
 
                     <!-- Quick Stats -->
-                    <div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-5 gap-4">
                         <div class="p-3 bg-[var(--bg-tertiary)] rounded-xl">
                             <p class="text-xs text-[var(--text-secondary)]">Used in Roles</p>
                             <p class="text-sm font-medium text-[var(--text-primary)]">{{ $privilege->roles->count() }}</p>
+                        </div>
+                        <div class="p-3 bg-[var(--bg-tertiary)] rounded-xl">
+                            <p class="text-xs text-[var(--text-secondary)]">Access Key Grants</p>
+                            <p class="text-sm font-medium text-[var(--text-primary)]">{{ $mappingCount }}</p>
                         </div>
                         <div class="p-3 bg-[var(--bg-tertiary)] rounded-xl">
                             <p class="text-xs text-[var(--text-secondary)]">Created</p>
@@ -63,7 +72,7 @@
                         </div>
                         <div class="p-3 bg-[var(--bg-tertiary)] rounded-xl">
                             <p class="text-xs text-[var(--text-secondary)]">Last Updated</p>
-                            <p class="text-sm font-medium text-[var(--text-primary)]">{{ $privilege->updated_at->diffForHumans() }}</p>
+                            <p class="text-sm font-medium text-[var(--text-primary)]">{{ $privilege->updated_at?->diffForHumans() ?? '—' }}</p>
                         </div>
                         <div class="p-3 bg-[var(--bg-tertiary)] rounded-xl">
                             <p class="text-xs text-[var(--text-secondary)]">Status</p>
@@ -80,7 +89,7 @@
                 <div class="flex flex-col sm:flex-row gap-3">
                     <a href="{{ route('privileges.edit', $privilege) }}"
                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg hover:shadow-xl"
-                       style="background: linear-gradient(135deg, var(--warning), var(--warning)/0.8); color: white;">
+                       style="background: linear-gradient(135deg, var(--warning), color-mix(in oklch, var(--warning) 80%, transparent)); color: var(--primary-foreground);">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
@@ -97,7 +106,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" data-reveal>
             <!-- Privilege Details Card -->
             <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] lg:col-span-2">
                 <div class="border-b border-[var(--border-color)]/30 px-6 py-4 bg-gradient-to-r from-[var(--bg-tertiary)] to-[var(--bg-tertiary)]/50">
@@ -125,6 +134,19 @@
                                     </span>
                                 </div>
                             </div>
+
+                            <div class="info-item">
+                                <label class="info-label">Linked Access Key</label>
+                                <div class="mt-1">
+                                    @if($privilege->access_key)
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20 font-mono">
+                                            {{ $privilege->access_key }}
+                                        </span>
+                                    @else
+                                        <span class="text-sm text-[var(--text-secondary)]">Not linked — label only</span>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
 
                         <div class="space-y-4">
@@ -135,7 +157,7 @@
 
                             <div class="info-item">
                                 <label class="info-label">Last Updated</label>
-                                <p class="info-value">{{ $privilege->updated_at->format('F d, Y \a\t h:i A') }}</p>
+                                <p class="info-value">{{ $privilege->updated_at?->format('F d, Y \a\t h:i A') ?? '—' }}</p>
                             </div>
                         </div>
                     </div>
@@ -223,7 +245,7 @@
                         </div>
                         <div class="flex items-center justify-between text-sm">
                             <span class="text-[var(--text-secondary)]">Last Updated</span>
-                            <span class="font-medium text-[var(--text-primary)]">{{ $privilege->updated_at->diffForHumans() }}</span>
+                            <span class="font-medium text-[var(--text-primary)]">{{ $privilege->updated_at?->diffForHumans() ?? '—' }}</span>
                         </div>
                     </div>
                 </div>
@@ -231,7 +253,7 @@
         </div>
 
         <!-- Associated Roles Section -->
-        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] mt-6">
+        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] mt-6" data-reveal>
             <div class="border-b border-[var(--border-color)]/30 px-6 py-4 bg-gradient-to-r from-[var(--bg-tertiary)] to-[var(--bg-tertiary)]/50">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <h2 class="text-xl font-semibold text-[var(--text-primary)] flex items-center gap-3">
@@ -338,7 +360,7 @@
         </div>
 
         <!-- Recent Activity -->
-        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] mt-6">
+        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] mt-6" data-reveal>
             <div class="border-b border-[var(--border-color)]/30 px-6 py-4 bg-gradient-to-r from-[var(--bg-tertiary)] to-[var(--bg-tertiary)]/50">
                 <h2 class="text-xl font-semibold text-[var(--text-primary)] flex items-center gap-3">
                     <svg class="w-5 h-5 text-[var(--accent-color)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -358,9 +380,9 @@
                         </div>
                         <div class="activity-content">
                             <p class="activity-title">Privilege Updated</p>
-                            <p class="activity-description">Details were last modified {{ $privilege->updated_at->diffForHumans() }}</p>
+                            <p class="activity-description">Details were last modified {{ $privilege->updated_at?->diffForHumans() ?? '—' }}</p>
                         </div>
-                        <div class="activity-time">{{ $privilege->updated_at->format('h:i A') }}</div>
+                        <div class="activity-time">{{ $privilege->updated_at?->format('h:i A') ?? '—' }}</div>
                     </div>
 
                     <div class="activity-item">
@@ -567,7 +589,7 @@ document.addEventListener('keydown', function(e) {
         background: var(--glass-base);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--border-color);
     }
 
     /* Info Item Styles */
@@ -597,50 +619,50 @@ document.addEventListener('keydown', function(e) {
         gap: 10px;
         width: 100%;
         padding: 12px 16px;
-        border-radius: 12px;
+        border-radius: var(--radius);
         font-weight: 500;
         font-size: 0.9rem;
-        transition: all 0.3s ease;
+        transition: all var(--transition-normal) ease;
         text-align: left;
     }
 
     .action-btn.edit-btn {
-        background: linear-gradient(to right, var(--warning)/10, transparent);
+        background: linear-gradient(to right, color-mix(in oklch, var(--warning) 10%, transparent), transparent);
         color: var(--warning);
-        border: 1px solid var(--warning)/20;
+        border: 1px solid color-mix(in oklch, var(--warning) 20%, transparent);
     }
 
     .action-btn.edit-btn:hover {
-        background: linear-gradient(to right, var(--warning)/20, transparent);
-        border-color: var(--warning)/40;
+        background: linear-gradient(to right, color-mix(in oklch, var(--warning) 20%, transparent), transparent);
+        border-color: color-mix(in oklch, var(--warning) 40%, transparent);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px var(--warning)/10;
+        box-shadow: 0 4px 12px color-mix(in oklch, var(--warning) 10%, transparent);
     }
 
     .action-btn.delete-btn {
-        background: linear-gradient(to right, var(--danger)/10, transparent);
+        background: linear-gradient(to right, color-mix(in oklch, var(--danger) 10%, transparent), transparent);
         color: var(--danger);
-        border: 1px solid var(--danger)/20;
+        border: 1px solid color-mix(in oklch, var(--danger) 20%, transparent);
     }
 
     .action-btn.delete-btn:hover {
-        background: linear-gradient(to right, var(--danger)/20, transparent);
-        border-color: var(--danger)/40;
+        background: linear-gradient(to right, color-mix(in oklch, var(--danger) 20%, transparent), transparent);
+        border-color: color-mix(in oklch, var(--danger) 40%, transparent);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px var(--danger)/10;
+        box-shadow: 0 4px 12px color-mix(in oklch, var(--danger) 10%, transparent);
     }
 
     .action-btn.create-btn {
-        background: linear-gradient(to right, var(--success)/10, transparent);
+        background: linear-gradient(to right, color-mix(in oklch, var(--success) 10%, transparent), transparent);
         color: var(--success);
-        border: 1px solid var(--success)/20;
+        border: 1px solid color-mix(in oklch, var(--success) 20%, transparent);
     }
 
     .action-btn.create-btn:hover {
-        background: linear-gradient(to right, var(--success)/20, transparent);
-        border-color: var(--success)/40;
+        background: linear-gradient(to right, color-mix(in oklch, var(--success) 20%, transparent), transparent);
+        border-color: color-mix(in oklch, var(--success) 40%, transparent);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px var(--success)/10;
+        box-shadow: 0 4px 12px color-mix(in oklch, var(--success) 10%, transparent);
     }
 
     .action-btn.outline-btn {

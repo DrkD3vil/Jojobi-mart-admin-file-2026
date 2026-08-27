@@ -13,6 +13,11 @@ class StoreReturnRequest extends FormRequest
             'location_id' => ['required','integer','exists:locations,id'],
             'refund_method' => ['nullable','string'],
             'note' => ['nullable','string'],
+            // Submitted as a hidden field generated once per page load, so a
+            // double form submission (double-click, back-button resubmit)
+            // reuses the same key and gets caught by the idempotency check
+            // in ReturnController::store() instead of posting a duplicate return.
+            'idempotency_key' => ['nullable','string','max:100'],
 
             'items' => ['required','array','min:1'],
             'items.*.order_item_id' => ['required','integer','exists:order_items,id'],

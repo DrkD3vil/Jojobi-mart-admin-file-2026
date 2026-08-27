@@ -41,7 +41,7 @@
             max-width: 1100px;
             margin: 1.5rem auto;
             padding: 0 1rem;
-            animation: pbFade .35s ease-out;
+            animation: pbFade var(--transition-slow) ease-out;
         }
 
         @keyframes pbFade {
@@ -237,6 +237,21 @@
             }
         }
 
+        @media (max-width:768px) {
+            .pb-grid--5 {
+                grid-template-columns: 1fr
+            }
+
+            .pb-header {
+                flex-direction: column;
+                align-items: stretch
+            }
+
+            .pb-header__actions {
+                justify-content: flex-start
+            }
+        }
+
         .pb-field {
             position: relative;
             padding: .65rem .65rem .55rem;
@@ -403,7 +418,7 @@
             color: var(--text-secondary);
             cursor: pointer;
             padding: .15rem .4rem;
-            border-radius: 8px;
+            border-radius: calc(var(--radius) - 2px);
         }
 
         .pb-selectedline button:hover {
@@ -475,7 +490,7 @@
             border-radius: 999px;
             background: var(--card);
             transition: transform var(--transition-normal), background var(--transition-normal);
-            box-shadow: 0 4px 10px rgb(0 0 0 / .25);
+            box-shadow: var(--card-shadow);
         }
 
         .pb-toggle input:checked+.pb-toggle__track {
@@ -742,7 +757,7 @@
         }
 
         .pb-animblock {
-            animation: pbDrop .25s ease-out
+            animation: pbDrop var(--transition-normal) ease-out
         }
 
         @keyframes pbDrop {
@@ -787,7 +802,7 @@
             box-shadow: var(--dropdown-shadow);
             display: flex;
             flex-direction: column;
-            animation: pbSlideIn .25s ease-out;
+            animation: pbSlideIn var(--transition-normal) ease-out;
         }
 
         @keyframes pbSlideIn {
@@ -826,7 +841,7 @@
             border: 1px solid var(--border-color);
             background: transparent;
             color: var(--text-primary);
-            border-radius: 10px;
+            border-radius: var(--radius);
             width: 38px;
             height: 38px;
             font-size: 1.35rem;
@@ -996,7 +1011,7 @@
         @endif
 
         {{-- Header --}}
-        <div class="pb-header">
+        <div class="pb-header" data-reveal>
             <div>
                 <div class="pb-kicker">Inventory / Product Batches</div>
                 <h2 class="pb-title">✏️ Edit Product Batch</h2>
@@ -1031,7 +1046,7 @@
         </div>
 
         {{-- Card --}}
-        <div class="pb-card glass-effect">
+        <div class="pb-card glass-effect" data-reveal>
 
             {{-- Current Batch badge --}}
             <div class="pb-selected">
@@ -1070,7 +1085,7 @@
 
 
                 {{-- PRODUCT SELECT --}}
-                <div class="pb-section">
+                <div class="pb-section" data-reveal>
                     <div class="pb-section__head">
                         <h4 class="pb-section__title">🔎 Select Product</h4>
                         <p class="pb-section__desc">Change product if needed (search by name or barcode).</p>
@@ -1221,7 +1236,7 @@
                 <div class="pb-divider"></div>
 
                 {{-- PRICING --}}
-                <div class="pb-section">
+                <div class="pb-section" data-reveal>
                     <div class="pb-section__head">
                         <h4 class="pb-section__title">💰 Pricing Configuration</h4>
                         <p class="pb-section__desc">Discount logic stays unchanged.</p>

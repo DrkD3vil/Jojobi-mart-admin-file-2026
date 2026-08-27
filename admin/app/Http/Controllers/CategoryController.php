@@ -140,7 +140,25 @@ class CategoryController extends Controller
         return view('categories.create', compact('flat'));
     }
 
+    /**
+     * 'categories.generate.barcode' route had no handler (fatal error on
+     * every hit). Suggests a fresh, unused barcode + preview SVG for the
+     * create/edit form -- read-only, nothing is persisted until store()/update().
+     */
+    public function generateNewBarcode(Request $request)
+    {
+        do {
+            $barcode = 'CAT-' . strtoupper(Str::random(8));
+        } while (Category::where('barcode', $barcode)->exists());
 
+        $svg = (new DNS1D())->getBarcodeSVG($barcode, 'C128');
+
+        return response()->json([
+            'success' => true,
+            'barcode' => $barcode,
+            'barcode_svg' => base64_encode($svg),
+        ]);
+    }
 
     public function store(Request $request)
     {
@@ -269,7 +287,9 @@ class CategoryController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'barcode' => 'nullable|string|max:50|unique:categories,barcode,' . $category->id,
-            'image' => 'nullable|image|max:5120',
+            // Match store()'s mimetype allowlist (excludes svg/bmp) to avoid uploading
+            // formats that can carry embedded scripts.
+            'image' => 'nullable|image|mimetypes:image/jpeg,image/png,image/webp|max:5120',
             'parent_id' => 'nullable|exists:categories,id',
         ]);
 
@@ -361,9 +381,20 @@ class CategoryController extends Controller
         return redirect()->back()->with('error', 'No categories selected.');
     }
 
-    // This will delete all selected categories
-    Category::whereIn('id', $ids)->delete();
+    try {
+        // This will delete all selected categories
+        // Note: categories.parent_id has no cascade rule, so this throws if a
+        // selected category still has children not included in the same batch.
+        Category::whereIn('id', $ids)->delete();
 
-    return redirect()->route('categories.index')->with('success', 'Selected categories deleted successfully.');
+        return redirect()->route('categories.index')->with('success', 'Selected categories deleted successfully.');
+    } catch (Throwable $e) {
+        Log::error('Category bulk delete failed', [
+            'ids' => $ids,
+            'message' => $e->getMessage(),
+        ]);
+
+        return redirect()->back()->with('error', 'Some categories could not be deleted because they still have subcategories.');
+    }
 }
 }

@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 
 use App\Models\User;
-use HasinHayder\Tyro\Models\Privilege;
 use HasinHayder\Tyro\Models\Role;
+use HasinHayder\Tyro\Support\TyroCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -61,6 +61,9 @@ class UserRoleController extends Controller
         foreach ($users as $user) {
             $user->roles()->syncWithoutDetaching($roles);  // Attach roles without removing existing ones
         }
+
+        // Invalidate cached role/privilege data so access changes (e.g. granting admin) apply immediately
+        TyroCache::forgetUsers($users->pluck('id'));
 
         return redirect()->route('user.roles.index')->with('success', 'Roles assigned to selected users.');
     }
@@ -120,6 +123,9 @@ class UserRoleController extends Controller
             }
         });
 
+        // Invalidate cached role/privilege data so access changes (e.g. granting admin) apply immediately
+        TyroCache::forgetUser($user->id);
+
         return redirect()
             ->route('user.roles.show', $user->id)
             ->with('success', 'Roles updated successfully.');
@@ -135,37 +141,9 @@ class UserRoleController extends Controller
 
         $user->roles()->detach($role);
 
+        // Invalidate cached role/privilege data so the removal (e.g. revoking admin) applies immediately
+        TyroCache::forgetUser($user->id);
+
         return redirect()->route('user.roles.index')->with('success', 'Role removed from user.');
-    }
-
-    /**
-     * Dynamically assign privileges to roles.
-     */
-    public function assignPrivilegesToRole(Request $request, $roleId)
-    {
-        $request->validate([
-            'privileges' => 'required|array',
-            'privileges.*' => 'exists:privileges,id',
-        ]);
-
-        $role = Role::findOrFail($roleId);
-        $privileges = Privilege::findOrFail($request->privileges);
-
-        $role->privileges()->syncWithoutDetaching($privileges);
-
-        return redirect()->route('roles.show', $roleId)->with('success', 'Privileges assigned to role.');
-    }
-
-    /**
-     * Remove a privilege from a role.
-     */
-    public function removePrivilegeFromRole($roleId, $privilegeId)
-    {
-        $role = Role::findOrFail($roleId);
-        $privilege = Privilege::findOrFail($privilegeId);
-
-        $role->privileges()->detach($privilege);
-
-        return redirect()->route('roles.show', $roleId)->with('success', 'Privilege removed from role.');
     }
 }

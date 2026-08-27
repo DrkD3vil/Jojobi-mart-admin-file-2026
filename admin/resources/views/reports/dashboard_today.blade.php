@@ -137,7 +137,7 @@
 
         .badge.new {
             background: var(--success);
-            color: white;
+            color: var(--success-foreground);
         }
 
         .badge.pending {
@@ -201,7 +201,7 @@
 
         .metric-trend.positive {
             background: var(--success);
-            color: white;
+            color: var(--success-foreground);
         }
 
         .metric-trend.negative {
@@ -437,7 +437,7 @@
 
         .insight-icon.success {
             background: var(--success);
-            color: white;
+            color: var(--success-foreground);
         }
 
         .insight-icon.warning {
@@ -1161,7 +1161,7 @@
             padding: 20px 22px;
             border-radius: 18px;
             background: rgba(2, 6, 23, .55);
-            border: 1px solid rgba(148, 163, 184, .22);
+            border: 1px solid rgba(147, 164, 176, .22);
             color: rgba(226, 232, 240, .92);
             box-shadow: 0 18px 50px rgba(0, 0, 0, .35);
             text-align: center;
@@ -1171,7 +1171,7 @@
             width: 46px;
             height: 46px;
             border-radius: 999px;
-            border: 4px solid rgba(148, 163, 184, .25);
+            border: 4px solid rgba(147, 164, 176, .25);
             border-top-color: rgba(226, 232, 240, .92);
             margin: 2px auto 12px;
             animation: spin 0.9s linear infinite;
@@ -1192,7 +1192,7 @@
             width: 320px;
             max-width: 100%;
             height: 10px;
-            background: rgba(148, 163, 184, .18);
+            background: rgba(147, 164, 176, .18);
             border-radius: 999px;
             overflow: hidden;
             margin: 12px auto 0;
@@ -1343,15 +1343,15 @@
 
             function palette() {
                 return {
-                    blue: 'rgba(59, 130, 246, 1)',
-                    sky: 'rgba(14, 165, 233, 1)',
-                    violet: 'rgba(139, 92, 246, 1)',
-                    green: 'rgba(34, 197, 94, 1)',
-                    amber: 'rgba(245, 158, 11, 1)',
-                    rose: 'rgba(244, 63, 94, 1)',
-                    slate: 'rgba(100, 116, 139, 1)',
-                    grid: 'rgba(148, 163, 184, .25)',
-                    tick: 'rgba(148, 163, 184, .9)',
+                    blue: 'rgba(255, 176, 32, 1)',
+                    sky: 'rgba(147, 164, 176, 1)',
+                    violet: 'rgba(76, 141, 255, 1)',
+                    green: 'rgba(47, 217, 192, 1)',
+                    amber: 'rgba(199, 146, 234, 1)',
+                    rose: 'rgba(255, 93, 93, 1)',
+                    slate: 'rgba(166, 124, 82, 1)',
+                    grid: 'rgba(147, 164, 176, .25)',
+                    tick: 'rgba(147, 164, 176, .9)',
                 };
             }
 

@@ -28,7 +28,7 @@
                         <div class="stat-icon warning">
                             <i class="fas fa-chart-line"></i>
                         </div>
-                        <div class="stat-value">$12,847</div>
+                        <div class="stat-value">৳12,847</div>
                         <div class="stat-label">Revenue</div>
                         <div class="stat-change positive">
                             <i class="fas fa-arrow-up"></i>

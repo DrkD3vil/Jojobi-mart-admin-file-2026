@@ -155,7 +155,10 @@ class CartController extends Controller
 
                 $imgs = ($images[$p->id] ?? collect())
                     ->map(fn($img) => [
-                        'image_path' => asset($img->image_path),
+                        // public disk files live under /storage/... (see ProductImageController::store,
+                        // which saves via ->store('products', 'public')); asset() alone pointed at
+                        // the web root and produced a 404 for every thumbnail in search results.
+                        'image_path' => asset('storage/' . $img->image_path),
                         'is_primary' => (int) $img->is_primary,
                     ])->values()->all();
 
@@ -188,6 +191,16 @@ class CartController extends Controller
         }
 
         return response()->json($results);
+    }
+
+    /**
+     * 'products.quick.search.update' route had no handler (fatal error on
+     * every hit) and duplicated what search() above already does correctly
+     * -- delegate instead of maintaining a second, divergent implementation.
+     */
+    public function quickProductSearch(Request $request): JsonResponse
+    {
+        return $this->search($request);
     }
 
     /* ===========================
@@ -580,7 +593,12 @@ $sync = app(CartGiftService::class)->sync($cart);
         return DB::transaction(function () {
             $cart = $this->lockActiveCart();
 
-            // CartItem::where('cart_id', $cart->id)->delete();
+            // Actually remove the items -- previously this only zeroed the
+            // cart totals while leaving the CartItem rows in place, so the
+            // "cleared" cart still rendered its old items (recalcCart sums
+            // CartItem.total_price) and checkout() would silently charge for
+            // them again since it reads items, not the cached cart->total.
+            CartItem::where('cart_id', $cart->id)->delete();
 
             $cart->total = 0;
             $cart->rewards_points_used = 0;
@@ -640,6 +658,63 @@ $sync = app(CartGiftService::class)->sync($cart);
         });
     }
 
+    /**
+     * 'cart.rewards.apply' route had no handler (fatal error on every hit).
+     * This only previews the redemption against the active cart for display;
+     * checkout() independently re-validates and re-applies rewards_points_used
+     * from its own request payload, so this can never under/over-apply points.
+     */
+    public function applyRewards(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'points' => 'required|numeric|min:0.0001',
+        ]);
+
+        return DB::transaction(function () use ($data) {
+            $cart = $this->lockActiveCart();
+
+            if (!$cart->customer_id) {
+                return response()->json(['success' => false, 'message' => 'Select a customer before applying rewards.'], 422);
+            }
+
+            $customer = Customer::whereKey($cart->customer_id)->lockForUpdate()->first();
+            if (!$customer) {
+                return response()->json(['success' => false, 'message' => 'Customer not found.'], 422);
+            }
+
+            $points = (float) $data['points'];
+            if ($points > (float) $customer->reward_points) {
+                return response()->json(['success' => false, 'message' => 'Not enough reward points'], 422);
+            }
+
+            $this->recalcCart($cart);
+            $rewardAmount = min($points * self::POINT_RATE, (float) $cart->total);
+
+            $cart->rewards_points_used = $points;
+            $cart->rewards_amount_used = $rewardAmount;
+            $cart->save();
+
+            return response()->json([
+                'success' => true,
+                'rewards_points_used' => $points,
+                'rewards_amount_used' => $rewardAmount,
+            ]);
+        });
+    }
+
+    /**
+     * 'cart.rewards.clear' route had no handler (fatal error on every hit).
+     */
+    public function clearRewards(Request $request): JsonResponse
+    {
+        $cart = $this->lockActiveCart();
+        $cart->rewards_points_used = 0;
+        $cart->rewards_amount_used = 0;
+        $cart->save();
+
+        return response()->json(['success' => true]);
+    }
+
     /* ===========================
        CHECKOUT (DEDUCT BATCH_STOCKS LOCATION-WISE)
        + ✅ Earn reward AFTER payment (when paid)
@@ -688,7 +763,10 @@ $sync = app(CartGiftService::class)->sync($cart);
             // ✅ Validate AGAIN before checkout (avoid race) using batch qty
             foreach ($cart->items as $ci) {
                 $needBatch = (float) ($ci->qty_in_batch_unit ?? $ci->quantity);
-                $this->assertBatchStockAvailable((int)$ci->product_batch_id, (int)$cart->id, $locationId, $needBatch);
+                // Exclude this item's own existing reservation, otherwise its
+                // quantity gets counted twice (once as "already reserved",
+                // once as the delta being checked) and can falsely block checkout.
+                $this->assertBatchStockAvailable((int)$ci->product_batch_id, (int)$cart->id, $locationId, $needBatch, (int)$ci->id);
             }
 
             $this->recalcCart($cart);
@@ -787,26 +865,42 @@ $sync = app(CartGiftService::class)->sync($cart);
                 $payments = null;
             }
 
-            $order = Order::create([
-                'order_no' => 'ORD-' . now()->format('YmdHis') . '-' . random_int(100, 999),
-                'session_id' => $cart->session_id,
-                'customer_id' => $cart->customer_id,
-                 'location_id' => $locationId, // ✅ add this
-                'subtotal' => $cartTotal,
-                'discount_total' => $discountTotal,
-                'payable_total' => $netCollect,
+            // order_no is unique but only has ~900 possibilities per second;
+            // retry with a fresh suffix on a genuine collision instead of
+            // letting a busy POS moment surface a raw SQL error to the cashier.
+            $order = null;
+            for ($attempt = 0; $attempt < 5; $attempt++) {
+                try {
+                    $order = Order::create([
+                        'order_no' => 'ORD-' . now()->format('YmdHis') . '-' . random_int(100, 999),
+                        'session_id' => $cart->session_id,
+                        'customer_id' => $cart->customer_id,
+                        'location_id' => $locationId, // ✅ add this
+                        'subtotal' => $cartTotal,
+                        'discount_total' => $discountTotal,
+                        'payable_total' => $netCollect,
 
-                'rewards_points_used' => $usedPoints,
-                'rewards_amount_used' => $rewardAmount,
+                        'rewards_points_used' => $usedPoints,
+                        'rewards_amount_used' => $rewardAmount,
 
-                'paid_total' => 0,
-                'due_total' => $netCollect,
-                'change_total' => 0,
-                'payment_status' => $netCollect > 0 ? 'unpaid' : 'paid',
-                'payment_note' => $data['payment_note'] ?? null,
+                        'paid_total' => 0,
+                        'due_total' => $netCollect,
+                        'change_total' => 0,
+                        'payment_status' => $netCollect > 0 ? 'unpaid' : 'paid',
+                        'payment_note' => $data['payment_note'] ?? null,
 
-                'status' => $netCollect > 0 ? 'pending' : 'completed',
-            ]);
+                        'status' => $netCollect > 0 ? 'pending' : 'completed',
+                    ]);
+                    break;
+                } catch (\Illuminate\Database\QueryException $e) {
+                    if ((int) ($e->errorInfo[1] ?? 0) !== 1062 || $attempt === 4) {
+                        throw $e;
+                    }
+                }
+            }
+
+            $order->recordTimeline('created', 'Order Created', "Order #{$order->order_no} created from cart checkout.", null, $order->status, 'shopping-bag');
+            $cart->recordTimeline('converted', 'Converted to Order', "Cart converted to order #{$order->order_no}.", null, null, 'shopping-bag');
 
             // attach redeem ledger to order
             if ($customer && $usedPoints > 0) {
@@ -898,6 +992,21 @@ $sync = app(CartGiftService::class)->sync($cart);
                 $paymentStatus = 'paid';
             }
 
+            // Persist the customer's balance changes. The advance credit was
+            // already baked into this order's payable_total above, so it's
+            // spent regardless of how much of the remainder gets paid now.
+            // Any old due gets collected first out of whatever was actually
+            // paid, before the rest counts toward this order's own total.
+            if ($customer && $applyMode === 'auto') {
+                $dueCollected = $oldDue > 0 ? min($paid, $oldDue) : 0.0;
+
+                if ($advanceUsed > 0 || $dueCollected > 0) {
+                    $customer->advance_balance = round($oldAdvance - $advanceUsed, 4);
+                    $customer->due_balance = round($oldDue - $dueCollected, 4);
+                    $customer->save();
+                }
+            }
+
             $order->paid_total = $paid;
             $order->due_total = $due;
             $order->change_total = $change;
@@ -906,9 +1015,10 @@ $sync = app(CartGiftService::class)->sync($cart);
             $order->save();
 
             // ✅ Earn reward points AFTER payment (only if fully paid)
-            // policy: earn = floor(paid_total * EARN_RATE), only if customer exists and order is paid
+            // policy: earn = floor(net order payable * EARN_RATE), never the raw
+            // tendered amount -- otherwise an overpayment earns unlimited points.
             if ($customer && $paymentStatus === 'paid' && $paid > 0) {
-                $earnPoints = (float) floor($paid * self::EARN_RATE);
+                $earnPoints = (float) floor(min($paid, $netCollect) * self::EARN_RATE);
 
                 if ($earnPoints > 0) {
                     $customer->reward_points = (float) $customer->reward_points + $earnPoints;
@@ -1218,7 +1328,8 @@ $sync = app(CartGiftService::class)->sync($cart);
                     'discount_label' => $i->discount_label,
 
                     'total_price' => (float) $i->total_price,
-                    'image' => $i->image ? asset($i->image->image_path) : null,
+                    // same public-disk path fix as search(): must be prefixed with storage/
+                    'image' => $i->image ? asset('storage/' . $i->image->image_path) : null,
 
                     'is_gift' => (bool) $i->is_gift,
                     'gift_source' => $i->gift_source,
@@ -1317,16 +1428,22 @@ $sync = app(CartGiftService::class)->sync($cart);
             }
         }
 
-        // ✅ Total based on batch qty
-        $total = $unitBatchPrice * $qtyBatch;
+        // ✅ Total is the final line price. unitBatchPrice (sell/whole/cust) is
+        // already the batch's configured final price -- sell_price is computed
+        // as (original_sell_price - discounted_price) or original*(1-pct/100)
+        // at batch-save time (see ProductBatchController::store/update), and
+        // whole/customer_whole prices are absolute admin-entered prices. The
+        // discount_amount/discount_percent computed above are informational
+        // "you saved X" figures for the UI only. Subtracting them from total
+        // again here double-discounted every batch-discounted retail line and
+        // EVERY wholesale/customer-whole line (verified: batch original=200,
+        // whole=190 was being charged 180 instead of the correct 190).
+        $total = max(0, $unitBatchPrice * $qtyBatch);
 
-        // If percent discount, apply to total (keep your existing style)
         if ($discountPercent !== null && $discountPercent > 0) {
-            $discountAmount = ($total * ($discountPercent / 100));
-            $total = max(0, $total - $discountAmount);
-        } else {
-            // fixed discount subtract
-            $total = max(0, $total - $discountAmount);
+            // recompute the informational "saved" amount off the original
+            // price (not the already-discounted total) so the label is accurate
+            $discountAmount = $original * $qtyBatch * ($discountPercent / 100);
         }
 
         return [
@@ -1487,4 +1604,8 @@ $sync = app(CartGiftService::class)->sync($cart);
 
         return 0.0;
     }
+
+
+
+
 }

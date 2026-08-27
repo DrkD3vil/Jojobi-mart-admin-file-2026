@@ -12,7 +12,7 @@
             @csrf
 
             {{-- Form Card --}}
-            <div class="form-card glass-effect animate-pop-in">
+            <div class="form-card glass-effect animate-pop-in" data-reveal>
                 {{-- Name Section --}}
                 <div class="form-section">
                     <div class="form-label-group">
@@ -89,7 +89,7 @@
             </div>
 
             {{-- Action Buttons --}}
-            <div class="form-actions animate-fade-in-delay">
+            <div class="form-actions animate-fade-in-delay" data-reveal>
                 <a href="{{ route('brands.index') }}" class="btn-secondary">
                     <svg viewBox="0 0 24 24">
                         <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
@@ -442,7 +442,7 @@
             border-radius: var(--radius, 0.625rem);
             overflow: hidden;
             border: 2px solid var(--border-color, oklch(0.9 0 0));
-            animation: popIn 0.3s ease-out;
+            animation: popIn var(--transition-normal, 250ms) ease-out;
         }
 
         .preview-image img {

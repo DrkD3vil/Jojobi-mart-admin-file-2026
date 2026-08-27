@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AccessKeyMappingController;
+use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\AiAssistantController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CartGiftAuditController;
@@ -18,16 +20,33 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Report\FinancialDashboardController;
 use App\Http\Controllers\Report\FinancialTodayDashboardController;
+use App\Http\Controllers\Report\ReportsAnalyticsController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\ReturnWizardController;
 use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\StockLedgerController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\OrderSplitController;
 use App\Http\Controllers\PrivilegeController;
 use App\Http\Controllers\ProductGiftController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\UserRoleController;
+use App\Http\Controllers\PublicOrderController;
 use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Public Routes (no login)
+|--------------------------------------------------------------------------
+| Reachable only via the signed URL embedded in the QR code printed on a
+| receipt. The `signed` middleware rejects any tampered URL, so this can't
+| be used to browse or enumerate other orders.
+*/
+
+Route::get('/order-status/{order}', [PublicOrderController::class, 'show'])
+    ->name('public.order.show')
+    ->middleware('signed');
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +73,25 @@ Route::middleware(['auth', 'tyro.access'])->group(function () {
 
     /*
     |----------------------------------------------------------------------
+    | Store Settings
+    |----------------------------------------------------------------------
+    */
+    Route::group(['defaults' => ['access_key' => 'settings']], function () {
+        Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
+        Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | Help & Terms
+    |----------------------------------------------------------------------
+    */
+    Route::view('/help', 'legal.help')->name('help.index');
+    Route::view('/terms', 'legal.terms')->name('terms.index');
+
+
+    /*
+    |----------------------------------------------------------------------
     | RBAC Core: Roles + Privileges + User Roles + Access Keys
     |----------------------------------------------------------------------
     */
@@ -61,6 +99,7 @@ Route::middleware(['auth', 'tyro.access'])->group(function () {
     // Roles
     Route::group(['defaults' => ['access_key' => 'roles']], function () {
         Route::resource('roles', RoleController::class);
+        Route::post('/roles/{role}/clone', [RoleController::class, 'clone'])->name('roles.clone');
     });
 
     // Privileges
@@ -83,24 +122,23 @@ Route::middleware(['auth', 'tyro.access'])->group(function () {
         Route::post('/user/{userId}/roles', [UserRoleController::class, 'store'])->name('user.roles.store');
 
         Route::delete('/user/{userId}/roles/{roleId}', [UserRoleController::class, 'destroy'])->name('user.roles.destroy');
-
-        Route::post('/role/{roleId}/privileges', [UserRoleController::class, 'assignPrivilegesToRole'])
-            ->name('role.privileges.assign');
-
-        Route::delete('/role/{roleId}/privileges/{privilegeId}', [UserRoleController::class, 'removePrivilegeFromRole'])
-            ->name('role.privileges.remove');
     });
 
     // ✅ Access Keys (your new RBAC mapping UI)
-    Route::group(['defaults' => ['access_key' => 'rbac']], function () {
-       Route::get('/access-keys', [AccessKeyMappingController::class, 'index'])->name('access_keys.index');
-Route::post('/access-keys', [AccessKeyMappingController::class, 'store'])->name('access_keys.store');
-Route::delete('/access-keys/{id}', [AccessKeyMappingController::class, 'destroy'])->name('access_keys.destroy');
-Route::get('/search', [AccessKeyMappingController::class, 'search'])->name('access_keys.search');
-Route::post('/assign-role', [AccessKeyMappingController::class, 'assignRole'])->name('assign.role');
-Route::post('/access-keys/bulk-destroy', [AccessKeyMappingController::class, 'bulkDestroy'])
-    ->name('access_keys.bulk_destroy');
-    });
+// Access Keys Mapping Routes
+Route::group(['defaults' => ['access_key' => 'rbac']], function () {
+    Route::get('/access-keys', [AccessKeyMappingController::class, 'index'])->name('access_keys.index');
+    Route::post('/access-keys', [AccessKeyMappingController::class, 'store'])->name('access_keys.store');
+    Route::delete('/access-keys/{id}', [AccessKeyMappingController::class, 'destroy'])->name('access_keys.destroy');
+    Route::get('/access-keys/search', [AccessKeyMappingController::class, 'search'])->name('access_keys.search');
+    Route::get('/access-keys/users/{id}/access', [AccessKeyMappingController::class, 'userAccess'])->name('access_keys.user_access');
+    Route::post('/access-keys/bulk-destroy', [AccessKeyMappingController::class, 'bulkDestroy'])->name('access_keys.bulk_destroy');
+    Route::get('/access-keys/{id}', [AccessKeyMappingController::class, 'show'])->name('access_keys.show');
+    Route::get('/rbac/audit-log', [AuditLogController::class, 'index'])->name('rbac.audit_log');
+
+    Route::post('/access-keys/ai-requests/{id}/approve', [AccessKeyMappingController::class, 'approveAiAccessRequest'])->name('access_keys.ai_requests.approve');
+    Route::post('/access-keys/ai-requests/{id}/deny', [AccessKeyMappingController::class, 'denyAiAccessRequest'])->name('access_keys.ai_requests.deny');
+});
 
 
     /*
@@ -171,6 +209,7 @@ Route::post('/products/bulk-force-delete', [ProductController::class, 'bulkForce
         Route::delete('/product-images/{id}/force', [ProductImageController::class, 'forceDelete'])->name('product-images.forceDelete');
 
         Route::delete('/product-images/{id}', [ProductImageController::class, 'deleteById'])->name('product-images.deleteById');
+        Route::post('/product-images/bulk-trash', [ProductImageController::class, 'bulkTrash'])->name('product-images.bulkTrash');
 
         Route::post('/products/{product}/images/{image}/primary-toggle', [ProductImageController::class, 'togglePrimary'])
             ->name('product.images.togglePrimary');
@@ -292,18 +331,46 @@ Route::post('/products/bulk-force-delete', [ProductController::class, 'bulkForce
     */
     Route::group(['defaults' => ['access_key' => 'customers']], function () {
 
-        Route::get('/customers', function () {
-            return view('customers.index');
-        })->name('customers.index');
+        // Route::get('/customers', function () {
+        //     return view('customers.index');
+        // })->name('customers.index');
 
-        Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
-        Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
-        Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+        // Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
+        // Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+        // Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
 
-        Route::post('/customers/{customer}/balance', [CustomerController::class, 'postBalance'])->name('customers.balance.post');
-        Route::post('/customers/{customer}/rewards', [CustomerController::class, 'postRewards'])->name('customers.rewards.post');
+        // Route::post('/customers/{customer}/balance', [CustomerController::class, 'postBalance'])->name('customers.balance.post');
+        // Route::post('/customers/{customer}/rewards', [CustomerController::class, 'postRewards'])->name('customers.rewards.post');
 
-        Route::get('/customers/quick/search', [CustomerController::class, 'quickSearch'])->name('customers.quick.search');
+        // Route::get('/customers/quick/search', [CustomerController::class, 'quickSearch'])->name('customers.quick.search');
+
+        // Customer routes
+    // NOTE: static /customers/xxx routes MUST be registered before the
+    // /customers/{customer} wildcard route, otherwise Laravel's router
+    // matches the wildcard first and these become unreachable (they'd
+    // be treated as CustomerController@show with customer id "export"/
+    // "stats", 404-ing instead of running).
+    Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
+    Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
+
+    // Quick search
+    Route::get('/customers/quick/search', [CustomerController::class, 'quickSearch'])->name('customers.quick.search');
+
+    // Export
+    Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
+
+    // Stats API
+    Route::get('/customers/stats', [CustomerController::class, 'getStats'])->name('customers.stats');
+
+    Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+    Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
+    Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+    Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+
+    // Balance & Rewards
+    Route::post('/customers/{customer}/balance', [CustomerController::class, 'postBalance'])->name('customers.balance.post');
+    Route::post('/customers/{customer}/rewards', [CustomerController::class, 'postRewards'])->name('customers.rewards.post');
     });
 
 
@@ -312,18 +379,163 @@ Route::post('/products/bulk-force-delete', [ProductController::class, 'bulkForce
     | Orders / Invoice / Payments
     |----------------------------------------------------------------------
     */
-    Route::group(['defaults' => ['access_key' => 'orders']], function () {
+Route::group(['defaults' => ['access_key' => 'orders']], function () {
 
-        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-        Route::get('/orders/ajax/index', [OrderController::class, 'ajaxIndex'])->name('orders.ajax.index');
+    Route::prefix('orders')->group(function () {
 
-        Route::get('/orders/{order}/payment', [PaymentController::class, 'create'])->name('payments.create');
-        Route::post('/orders/{order}/payment', [PaymentController::class, 'store'])->name('payments.store');
-        Route::get('/orders/{order}/payments', [PaymentController::class, 'index'])->name('payments.index');
+        // Edit page
+        Route::get('{order}/edit', [OrderController::class, 'edit'])
+            ->name('orders.edit')
+            ->where('order', '[0-9]+');
 
-        Route::get('/invoice/{order}', [InvoiceController::class, 'show'])->name('invoice.show');
+        // Update order
+        Route::put('{order}', [OrderController::class, 'update'])
+            ->name('orders.update')
+            ->where('order', '[0-9]+');
+
+        // Get order data (AJAX)
+        Route::get('{order}/data', [OrderController::class, 'getOrderData'])
+            ->name('orders.data')
+            ->where('order', '[0-9]+');
+
+        // Get order items (AJAX)
+        Route::get('{order}/items', [OrderController::class, 'getItems'])
+            ->name('orders.items')
+            ->where('order', '[0-9]+');
+
+        // ============================================
+        // ORDER ITEM MANAGEMENT
+        // ============================================
+
+        // Add item to order
+        Route::post('{order}/item', [OrderController::class, 'addItem'])
+            ->name('order.add.item')
+            ->where('order', '[0-9]+');
+
+        // Update order item
+        Route::post('{order}/item/update', [OrderController::class, 'updateItem'])
+            ->name('order.item.update')
+            ->where('order', '[0-9]+');
+
+        // Remove item from order
+        Route::delete('{order}/item/{itemId}', [OrderController::class, 'removeItem'])
+            ->name('order.item.remove')
+            ->where('order', '[0-9]+')
+            ->where('itemId', '[0-9]+');
+
+        // Clear all items from order
+        Route::delete('{order}/items/clear', [OrderController::class, 'clearItems'])
+            ->name('order.clear.items')
+            ->where('order', '[0-9]+');
+
+        // ============================================
+        // GIFT MANAGEMENT
+        // ============================================
+
+        // Add manual gift
+        Route::post('{order}/gift/manual', [OrderController::class, 'addManualGift'])
+            ->name('order.gift.manual.add')
+            ->where('order', '[0-9]+');
+
+        // Remove manual gift
+        Route::delete('{order}/gift/manual/{itemId}', [OrderController::class, 'removeManualGift'])
+            ->name('order.gift.manual.remove')
+            ->where('order', '[0-9]+')
+            ->where('itemId', '[0-9]+');
     });
+
+    // ===== MAIN ORDER ROUTES =====
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/trash', [OrderController::class, 'trashIndex'])->name('orders.trash');
+    Route::post('/orders/{id}/restore', [OrderController::class, 'restore'])->name('orders.restore');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    // Route::get('/orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
+    Route::get('/orders/ajax/index', [OrderController::class, 'ajaxIndex'])->name('orders.ajax.index');
+
+
+
+    // AJAX search endpoint
+    Route::get('/ajax/search', [OrderController::class, 'ajaxSearch'])->name('orders.ajax.search');
+
+
+
+
+
+    // ===== ORDER PRINT =====
+    Route::get('/orders/{id}/print', [OrderController::class, 'print'])->name('orders.print');
+
+
+
+
+     // Split management
+    // Order Split Routes
+    Route::get('{order}/split', [OrderSplitController::class, 'index'])
+        ->name('orders.split')
+        ->where('order', '[0-9]+');
+
+    Route::post('{order}/split/preview', [OrderSplitController::class, 'preview'])
+        ->name('orders.split.preview')
+        ->where('order', '[0-9]+');
+
+    Route::post('{order}/split/execute', [OrderSplitController::class, 'split'])
+        ->name('orders.split.execute')
+        ->where('order', '[0-9]+');
+
+    Route::get('{order}/split/history', [OrderSplitController::class, 'history'])
+        ->name('orders.split.history')
+        ->where('order', '[0-9]+');
+
+    Route::post('{parentOrder}/split/merge/{childOrder}', [OrderSplitController::class, 'merge'])
+        ->name('orders.split.merge')
+        ->where('parentOrder', '[0-9]+')
+        ->where('childOrder', '[0-9]+');
+
+
+
+
+    // ===== STATUS-BASED ORDER ROUTES =====
+    Route::get('/orders/status/pending', [OrderController::class, 'pending'])->name('orders.pending');
+    Route::get('/orders/status/processing', [OrderController::class, 'processing'])->name('orders.processing');
+    Route::get('/orders/status/completed', [OrderController::class, 'completed'])->name('orders.completed');
+    Route::get('/orders/status/paid', [OrderController::class, 'paid'])->name('orders.paid');
+    Route::get('/orders/status/refunded', [OrderController::class, 'refunded'])->name('orders.refunded');
+    Route::get('/orders/status/returned', [OrderController::class, 'returned'])->name('orders.returned');
+    Route::get('/orders/status/cancelled', [OrderController::class, 'cancelled'])->name('orders.cancelled');
+
+    // ===== ORDER ACTION ROUTES =====
+    Route::post('/orders/{id}/process', [OrderController::class, 'process'])->name('orders.process');
+    Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/orders/{id}/complete', [OrderController::class, 'complete'])->name('orders.complete');
+    Route::post('/orders/{id}/refund', [OrderController::class, 'refund'])->name('orders.refund');
+
+    // Cancel gets a real confirmation page (order summary + optional reason)
+    // instead of an instant one-click POST.
+    Route::get('/orders/{order}/cancel', [OrderController::class, 'cancelForm'])->name('orders.cancel.form');
+
+    // These 3 actions are still POST-only (they mutate state), but visiting
+    // the URL directly -- a bookmark, a typed URL, a stale link -- should
+    // land on the order itself (where the real action buttons live) instead
+    // of a bare 405 error page.
+    Route::get('/orders/{order}/process', [OrderController::class, 'show']);
+    Route::get('/orders/{order}/complete', [OrderController::class, 'show']);
+    Route::get('/orders/{order}/refund', [OrderController::class, 'show']);
+
+    // ===== TRASH ROUTES =====
+    Route::post('/orders/{order}/trash', [OrderController::class, 'trash'])->name('orders.trash.move');
+    Route::post('/orders/restore-multiple', [OrderController::class, 'restoreMultiple'])->name('orders.restore-multiple');
+    Route::delete('/orders/{id}/force-delete', [OrderController::class, 'forceDelete'])->name('orders.force-delete');
+    Route::delete('/orders/force-delete-multiple', [OrderController::class, 'forceDeleteMultiple'])->name('orders.force-delete-multiple');
+    Route::delete('/orders/empty-trash', [OrderController::class, 'emptyTrash'])->name('orders.empty-trash');
+
+    // ===== PAYMENT ROUTES =====
+    Route::get('/orders/{order}/payment', [PaymentController::class, 'create'])->name('payments.create');
+    Route::post('/orders/{order}/payment', [PaymentController::class, 'store'])->name('payments.store');
+    Route::get('/orders/{order}/payments', [PaymentController::class, 'index'])->name('payments.index');
+
+    // ===== INVOICE ROUTE =====
+    Route::get('/invoice/{order}', [InvoiceController::class, 'show'])->name('invoice.show');
+    Route::get('/invoice/{order}/print', [InvoiceController::class, 'print'])->name('invoice.print');
+});
 
 
     /*
@@ -389,14 +601,8 @@ Route::post('/products/bulk-force-delete', [ProductController::class, 'bulkForce
     |----------------------------------------------------------------------
     */
 
-    Route::middleware(['auth', 'tyro.access'])->group(function () {
-
     Route::get('/', [FinancialTodayDashboardController::class, 'index'])
         ->name('dashboard.financial.today');
-
-});
-
-
 
     Route::group(['defaults' => ['access_key' => 'dashboard']], function () {
 
@@ -409,13 +615,20 @@ Route::post('/products/bulk-force-delete', [ProductController::class, 'bulkForce
         Route::get('/dashboard/financial/realtime', [FinancialDashboardController::class, 'realTime'])->name('dashboard.financial.realtime');
         Route::get('/dashboard/financial/stream', [FinancialDashboardController::class, 'stream'])->name('dashboard.financial.stream');
 
-        Route::post('/dashboard/financial/export', [FinancialDashboardController::class, 'export'])->name('dashboard.financial.export');
+        Route::get('/dashboard/financial/export', [FinancialDashboardController::class, 'export'])->name('dashboard.financial.export');
 
         // Route::get('/', [FinancialTodayDashboardController::class, 'index'])->name('dashboard.financial.today');
         Route::get('/dashboard/financial/today/data', [FinancialTodayDashboardController::class, 'data'])->name('dashboard.financial.today.data');
         Route::get('/dashboard/financial/today/realtime', [FinancialTodayDashboardController::class, 'realTime'])->name('dashboard.financial.today.realtime');
         Route::get('/dashboard/financial/today/stream', [FinancialTodayDashboardController::class, 'stream'])->name('dashboard.financial.today.stream');
         Route::get('/dashboard/financial/today/recent-orders', [FinancialTodayDashboardController::class, 'recentOrders'])->name('dashboard.financial.today.recent_orders');
+
+        Route::get('/dashboard/reports', [ReportsAnalyticsController::class, 'index'])->name('dashboard.reports');
+        Route::get('/dashboard/reports/products', [ReportsAnalyticsController::class, 'products'])->name('dashboard.reports.products');
+        Route::get('/dashboard/reports/customers', [ReportsAnalyticsController::class, 'customers'])->name('dashboard.reports.customers');
+        Route::get('/dashboard/reports/locations', [ReportsAnalyticsController::class, 'locations'])->name('dashboard.reports.locations');
+        Route::get('/dashboard/reports/trends', [ReportsAnalyticsController::class, 'trends'])->name('dashboard.reports.trends');
+        Route::get('/dashboard/reports/export', [ReportsAnalyticsController::class, 'export'])->name('dashboard.reports.export');
     });
 
 
@@ -439,6 +652,21 @@ Route::post('/products/bulk-force-delete', [ProductController::class, 'bulkForce
         Route::post('/expenses-trash/empty', [ExpenseController::class, 'emptyTrash'])->name('expenses.emptyTrash');
 
         Route::get('/expenses-export/csv', [ExpenseController::class, 'exportCsv'])->name('expenses.export.csv');
+    });
+
+    // Reachable by any authenticated user regardless of the ai_assistant key,
+    // so someone without access still lands on a "request access" screen
+    // instead of a bare 403. The actual chat/tool actions below stay gated.
+    Route::get('/ai-assistant', [AiAssistantController::class, 'index'])->name('ai_assistant.index');
+    Route::get('/ai-assistant/state', [AiAssistantController::class, 'state'])->name('ai_assistant.state');
+    Route::post('/ai-assistant/request-access', [AiAssistantController::class, 'requestAccess'])->name('ai_assistant.request_access');
+
+    Route::group(['defaults' => ['access_key' => 'ai_assistant']], function () {
+        Route::post('/ai-assistant/chat', [AiAssistantController::class, 'chat'])->name('ai_assistant.chat');
+        Route::post('/ai-assistant/resolve', [AiAssistantController::class, 'resolve'])->name('ai_assistant.resolve');
+        Route::post('/ai-assistant/reset', [AiAssistantController::class, 'reset'])->name('ai_assistant.reset');
+        Route::post('/ai-assistant/model', [AiAssistantController::class, 'updateModel'])->name('ai_assistant.update_model');
+        Route::get('/ai-assistant/logs', [AiAssistantController::class, 'logs'])->name('ai_assistant.logs');
     });
 
 });

@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
 
 class ReturnWizardController extends Controller
 {
@@ -64,13 +65,19 @@ class ReturnWizardController extends Controller
             }
         }
 
+        // One token per page render: submitted back as a hidden field and
+        // checked in ReturnController::store() so a double form submission
+        // (double-click, back-button resubmit) doesn't post the same return twice.
+        $idempotencyKey = (string) Str::uuid();
+
         return view('returns.wizard_web', compact(
             'locations',
             'order',
             'orderItems',
             'customers',
             'customer',
-            'customerOrders'
+            'customerOrders',
+            'idempotencyKey'
         ));
     }
 
@@ -122,6 +129,7 @@ class ReturnWizardController extends Controller
         $orderItems = collect();
         $customer = null;
         $customerOrders = collect();
+        $idempotencyKey = (string) Str::uuid();
 
         return view('returns.wizard_web', compact(
             'locations',
@@ -129,7 +137,8 @@ class ReturnWizardController extends Controller
             'order',
             'orderItems',
             'customer',
-            'customerOrders'
+            'customerOrders',
+            'idempotencyKey'
         ))->with('customerQuery', $q);
     }
 

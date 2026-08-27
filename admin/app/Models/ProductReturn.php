@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTimeline;
 use Illuminate\Database\Eloquent\Model;
 
 class ProductReturn extends Model
 {
+    use HasTimeline;
+
     protected $table = 'returns';
 
     protected $fillable = [

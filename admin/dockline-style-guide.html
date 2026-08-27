@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dockline — Design System Spec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --radius:2px; --ease:cubic-bezier(.22,.9,.32,1); }
+  html[data-theme="light"]{
+    --bg:#F4F0E6; --bg-2:#EAE3D2; --surface:#FFFFFF;
+    --ink:#12181C; --ink-soft:#5A6570; --line:rgba(18,24,28,.14);
+    --accent:#B96E10; --accent-text:#12181C; --teal-c:#177264;
+  }
+  html[data-theme="dark"]{
+    --bg:#0A1420; --bg-2:#0E1926; --surface:#101B27;
+    --ink:#ECE6D8; --ink-soft:#93A4B0; --line:rgba(236,230,216,.14);
+    --accent:#FFB020; --accent-text:#0A1420; --teal-c:#2FD9C0;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; transition:background .4s,color .4s;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 32px;}
+  h1,h2,h3{font-family:'Fraunces',serif; font-weight:500;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); font-weight:600;}
+  code{font-family:'IBM Plex Mono',monospace;}
+
+  header{position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); padding:18px 0;}
+  header .wrap{display:flex; justify-content:space-between; align-items:center;}
+  header h1{font-size:18px;}
+  .toggle{display:flex; border:1px solid var(--line); border-radius:20px; overflow:hidden; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.1em;}
+  .toggle button{background:none; border:none; padding:7px 12px; color:var(--ink-soft); cursor:pointer; font-family:inherit; font-size:inherit;}
+  .toggle button.active{background:var(--accent); color:var(--accent-text); font-weight:600;}
+
+  section{padding:64px 0; border-bottom:1px solid var(--line);}
+  .sec-head{margin-bottom:40px;}
+  .sec-head h2{font-size:28px; margin-top:8px;}
+  .sec-head p{color:var(--ink-soft); font-size:14px; margin-top:8px; max-width:60ch; line-height:1.6;}
+
+  /* copy chip, reused everywhere */
+  .copy{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px;
+    background:var(--surface); border:1px solid var(--line); border-radius:4px;
+    padding:5px 9px; cursor:pointer; color:var(--ink-soft);
+    transition:border-color .2s, color .2s, transform .15s;
+  }
+  .copy:hover{border-color:var(--accent); color:var(--ink);}
+  .copy:active{transform:scale(.96);}
+  .copy svg{width:12px; height:12px; flex-shrink:0;}
+  .copy.copied{color:var(--teal-c); border-color:var(--teal-c);}
+
+  /* COLORS */
+  .color-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:16px;}
+  .swatch{border:1px solid var(--line); border-radius:6px; overflow:hidden; background:var(--surface);}
+  .swatch-fill{height:80px;}
+  .swatch-meta{padding:12px 14px;}
+  .swatch-name{font-size:13px; font-weight:600; margin-bottom:2px;}
+  .swatch-role{font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;}
+
+  /* TYPE */
+  .type-row{display:grid; grid-template-columns:140px 1fr 220px; gap:20px; align-items:center; padding:22px 0; border-top:1px solid var(--line);}
+  .type-row:first-child{border-top:none;}
+  .type-tag{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft);}
+  .type-sample{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .type-specs{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); text-align:right; line-height:1.8;}
+
+  /* COMPONENT TABLES */
+  .comp-block{margin-bottom:36px;}
+  .comp-title{font-size:16px; font-weight:600; margin-bottom:14px; display:flex; align-items:center; gap:10px;}
+  .comp-title .tag{font-family:'IBM Plex Mono',monospace; font-size:10px; background:var(--bg-2); border:1px solid var(--line); padding:2px 8px; border-radius:12px; color:var(--ink-soft);}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  table th{text-align:left; font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); padding:10px 12px; border-bottom:1px solid var(--line);}
+  table td{padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top;}
+  table td code{background:var(--bg-2); padding:2px 6px; border-radius:3px; font-size:12px;}
+
+  /* live button preview */
+  .btn{font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:.06em; text-transform:uppercase; text-decoration:none; display:inline-flex; align-items:center; gap:10px; padding:14px 22px; cursor:pointer; border:none; transition:transform .35s var(--ease), box-shadow .35s var(--ease);}
+  .btn-stamp{background:var(--accent); color:var(--accent-text); font-weight:600; clip-path:polygon(0 0,100% 0,100% 70%,92% 100%,0 100%); box-shadow:0 1px 0 rgba(0,0,0,.15);}
+  .btn-stamp:hover{transform:translate(-2px,-3px) rotate(-.6deg); box-shadow:4px 6px 0 rgba(0,0,0,.3);}
+  .btn-cut{background:transparent; color:var(--ink); border:1px dashed color-mix(in srgb, var(--ink) 35%, transparent);}
+  .btn-cut:hover{background:var(--surface); border-color:var(--ink); transform:translateY(-2px);}
+  .btn-preview{display:flex; gap:16px; padding:24px; background:var(--bg-2); border:1px solid var(--line); border-radius:6px; margin-bottom:14px;}
+
+  /* animation demo row */
+  .anim-demo{width:60px; height:60px; background:var(--accent); border-radius:4px; flex-shrink:0;}
+  .anim-row{display:flex; align-items:center; gap:24px; padding:18px; background:var(--bg-2); border:1px solid var(--line); border-radius:6px; margin-bottom:14px;}
+  .anim-info{flex:1;}
+  .anim-name{font-weight:600; font-size:14px; margin-bottom:4px;}
+  .anim-desc{font-size:12.5px; color:var(--ink-soft); margin-bottom:8px;}
+  @keyframes demoRise{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;}}
+  @keyframes demoFlip{0%{transform:rotateX(0);}45%{transform:rotateX(90deg); opacity:.3;}55%{transform:rotateX(-90deg); opacity:.3;}100%{transform:rotateX(0);}}
+  @keyframes demoPulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+  .play-rise{animation:demoRise 1s var(--ease) infinite;}
+  .play-flip{animation:demoFlip 1.4s var(--ease) infinite;}
+  .play-pulse{animation:demoPulse 1.8s ease infinite;}
+  .play-skew:hover{transform:translate(-3px,-4px) rotate(-2deg); transition:transform .35s var(--ease);}
+
+  footer{padding:40px 0; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft);}
+
+  @media (max-width:720px){
+    .type-row{grid-template-columns:1fr; gap:6px;}
+    .type-specs{text-align:left;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>Dockline — Design System</h1>
+    <div class="toggle" id="themeToggle">
+      <button data-mode="dark" class="active">DARK</button>
+      <button data-mode="light">LIGHT</button>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Color</p>
+      <h2>Palette &amp; roles</h2>
+      <p>One token set drives both modes. Only <code>--bg</code>, <code>--surface</code>, <code>--ink</code> and <code>--accent</code> shift value between themes — every component references the variable, never a raw hex.</p>
+    </div>
+    <div class="color-grid" id="colorGrid"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Typography</p>
+      <h2>Type scale</h2>
+      <p>Three families, three jobs: <strong>Fraunces</strong> for display headlines, <strong>Inter</strong> for reading text and UI labels, <strong>IBM Plex Mono</strong> for data — SKUs, stats, eyebrows, timestamps.</p>
+    </div>
+    <div id="typeScale"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Components</p>
+      <h2>Buttons</h2>
+      <p>Two styles only. Stamp = primary commitment action. Cut-line = secondary / exploratory action. Never both filled on one screen.</p>
+    </div>
+
+    <div class="comp-block">
+      <div class="comp-title">Primary — Stamp button <span class="tag">.btn-stamp</span></div>
+      <div class="btn-preview"><a class="btn btn-stamp">Request a walkthrough</a></div>
+      <table>
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td>Background</td><td><code>var(--accent)</code></td></tr>
+        <tr><td>Text color</td><td><code>var(--accent-text)</code></td></tr>
+        <tr><td>Font</td><td>IBM Plex Mono, 600, 13px, uppercase, 0.06em tracking</td></tr>
+        <tr><td>Padding</td><td>14px 22px</td></tr>
+        <tr><td>Shape</td><td><code>clip-path: polygon(0 0,100% 0,100% 70%,92% 100%,0 100%)</code> — clipped bottom-right corner</td></tr>
+        <tr><td>Rest shadow</td><td><code>0 1px 0 rgba(0,0,0,.15)</code></td></tr>
+        <tr><td>Hover</td><td><code>translate(-2px,-3px) rotate(-.6deg)</code>, shadow grows to <code>4px 6px 0 rgba(0,0,0,.3)</code>, 0.35s <code>cubic-bezier(.22,.9,.32,1)</code></td></tr>
+        <tr><td>Active</td><td>returns to rest position instantly — "stamp thud"</td></tr>
+      </table>
+    </div>
+
+    <div class="comp-block">
+      <div class="comp-title">Secondary — Cut-line button <span class="tag">.btn-cut</span></div>
+      <div class="btn-preview"><a class="btn btn-cut">See it on the floor</a></div>
+      <table>
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td>Background</td><td>transparent → <code>var(--surface)</code> on hover</td></tr>
+        <tr><td>Border</td><td>1px dashed, ink at 35% opacity → solid ink on hover</td></tr>
+        <tr><td>Font</td><td>IBM Plex Mono, 400, 13px, uppercase, 0.06em tracking</td></tr>
+        <tr><td>Icon</td><td>16px stroke icon, 0.7 opacity, left of label</td></tr>
+        <tr><td>Hover</td><td><code>translateY(-2px)</code>, 0.35s ease</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Components</p>
+      <h2>Structural pieces</h2>
+    </div>
+
+    <div class="comp-block">
+      <div class="comp-title">Nav bar <span class="tag">header.nav</span></div>
+      <table>
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td>Position</td><td><code>sticky; top:0</code></td></tr>
+        <tr><td>Background</td><td><code>color-mix(in srgb, var(--bg) 88%, transparent)</code> + <code>backdrop-filter: blur(10px)</code></td></tr>
+        <tr><td>Border</td><td>1px solid <code>var(--line)</code>, bottom only</td></tr>
+        <tr><td>Height</td><td>18px vertical padding, content ~62px total</td></tr>
+        <tr><td>Logo type</td><td>Fraunces 600, 20px</td></tr>
+        <tr><td>Nav links</td><td>Inter 400, 14px, ink-soft → ink on hover, 0.25s</td></tr>
+      </table>
+    </div>
+
+    <div class="comp-block">
+      <div class="comp-title">Theme toggle <span class="tag">.toggle</span></div>
+      <table>
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td>Shape</td><td>Pill, 20px radius, 1px border, hairline-split two buttons</td></tr>
+        <tr><td>Label font</td><td>IBM Plex Mono, 10px, 0.1em tracking</td></tr>
+        <tr><td>Active state</td><td>Fill <code>var(--accent)</code>, text <code>var(--accent-text)</code>, weight 600</td></tr>
+        <tr><td>Transition</td><td>color/background 0.25s ease</td></tr>
+      </table>
+    </div>
+
+    <div class="comp-block">
+      <div class="comp-title">Manifest board (signature) <span class="tag">.board</span></div>
+      <table>
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td>Container</td><td><code>var(--surface)</code> bg, 1px <code>var(--line)</code> border, 4px radius</td></tr>
+        <tr><td>Shadow</td><td>Dark: <code>0 10px 30px rgba(0,0,0,.35)</code> · Light: <code>0 10px 30px rgba(18,24,28,.08)</code></td></tr>
+        <tr><td>Header</td><td>11px mono, uppercase, 0.12em tracking, live-status dot pulses 2s infinite</td></tr>
+        <tr><td>Rows</td><td>4-col grid (SKU / location / qty / status), 12.5px mono, 1px row dividers</td></tr>
+        <tr><td>Qty color</td><td>Positive → <code>var(--teal-c)</code> · Negative → <code>var(--accent)</code></td></tr>
+        <tr><td>Update cadence</td><td>One random row replaced every 2.2s</td></tr>
+      </table>
+    </div>
+
+    <div class="comp-block">
+      <div class="comp-title">Feature / stat cards <span class="tag">.card / .stat</span></div>
+      <table>
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td>Grid</td><td>4-col (features) / 3-col (stats), 1px hairline gaps forming a table effect</td></tr>
+        <tr><td>Card padding</td><td>32px 26px</td></tr>
+        <tr><td>Card hover</td><td>Background shifts <code>var(--bg)</code> → <code>var(--surface)</code>, 0.4s</td></tr>
+        <tr><td>Stat number</td><td>Fraunces, clamp(32px,4vw,48px), color <code>var(--accent)</code></td></tr>
+        <tr><td>Stat label</td><td>IBM Plex Mono, 11.5px, uppercase, 0.06em</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section style="border-bottom:none;">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Motion</p>
+      <h2>Animation specs</h2>
+      <p>Everything runs on one easing curve — <code>cubic-bezier(.22,.9,.32,1)</code> — so the page feels like one mechanism, not several. All motion respects <code>prefers-reduced-motion</code>.</p>
+    </div>
+
+    <div class="anim-row">
+      <div class="anim-demo play-rise"></div>
+      <div class="anim-info">
+        <div class="anim-name">Hero rise-in</div>
+        <div class="anim-desc">Each hero element fades up 16px on page load, staggered 120ms apart (eyebrow → headline → lede → CTAs → note).</div>
+        <span class="copy" data-copy="opacity:0; transform:translateY(16px); animation: rise .8s cubic-bezier(.22,.9,.32,1) forwards; animation-delay: .18s;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>Copy CSS</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <div class="anim-demo play-flip" style="border-radius:2px;"></div>
+      <div class="anim-info">
+        <div class="anim-name">Manifest flip</div>
+        <div class="anim-desc">Split-flap rotation on rowsChanged — mimics an airport/dock departure board. 0.5s, triggered every 2.2s on a random row.</div>
+        <span class="copy" data-copy="@keyframes flip { 0%{transform:rotateX(0deg); opacity:1;} 45%{transform:rotateX(90deg); opacity:.3;} 55%{transform:rotateX(-90deg); opacity:.3;} 100%{transform:rotateX(0deg); opacity:1;} } .flap.flip{ animation: flip .5s cubic-bezier(.22,.9,.32,1); }"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>Copy CSS</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <div class="anim-demo play-pulse" style="border-radius:50%; width:16px; height:16px; background:var(--teal-c);"></div>
+      <div class="anim-info">
+        <div class="anim-name">Live-status pulse</div>
+        <div class="anim-desc">Status dot on the manifest board breathes continuously to signal "this is live," not a static screenshot.</div>
+        <span class="copy" data-copy="@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.45;} } .dot{ animation: pulse 2s infinite; }"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>Copy CSS</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <div class="anim-demo play-skew" style="cursor:pointer;"></div>
+      <div class="anim-info">
+        <div class="anim-name">Button skew-lift (hover me)</div>
+        <div class="anim-desc">Primary button lifts and rotates -0.6deg on hover, with shadow depth increasing to sell a "stamped down" feel.</div>
+        <span class="copy" data-copy=".btn-stamp:hover{ transform: translate(-2px,-3px) rotate(-.6deg); box-shadow: 4px 6px 0 rgba(0,0,0,.3); transition: transform .35s cubic-bezier(.22,.9,.32,1), box-shadow .35s cubic-bezier(.22,.9,.32,1); }"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>Copy CSS</span>
+      </div>
+    </div>
+
+    <div class="anim-row" style="background:transparent; border:none; padding:18px 0 0;">
+      <div class="anim-info">
+        <div class="anim-name">Scroll reveal — process steps</div>
+        <div class="anim-desc">Each of the five process rows slides in from the left (-12px → 0) and fades in once it crosses 20% into the viewport, via IntersectionObserver.</div>
+        <span class="copy" data-copy=".p-row{ opacity:0; transform:translateX(-12px); transition: opacity .7s cubic-bezier(.22,.9,.32,1), transform .7s cubic-bezier(.22,.9,.32,1); } .p-row.in{ opacity:1; transform:none; }"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>Copy CSS</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>Dockline design system · generated as a living reference — copy any value directly into your codebase</footer>
+
+<script>
+  // theme toggle
+  const root = document.documentElement;
+  const toggle = document.getElementById('themeToggle');
+  toggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('button'); if(!btn) return;
+    root.setAttribute('data-theme', btn.dataset.mode);
+    toggle.querySelectorAll('button').forEach(b => b.classList.toggle('active', b===btn));
+  });
+
+  // color tokens
+  const colors = [
+    {name:'Ink / Background', dark:'#0A1420', light:'#F4F0E6', role:'Base canvas'},
+    {name:'Surface', dark:'#101B27', light:'#FFFFFF', role:'Cards, board, nav'},
+    {name:'Surface Alt', dark:'#0E1926', light:'#EAE3D2', role:'Section backgrounds'},
+    {name:'Ink / Text', dark:'#ECE6D8', light:'#12181C', role:'Primary text'},
+    {name:'Ink Soft', dark:'#93A4B0', light:'#5A6570', role:'Secondary text, captions'},
+    {name:'Accent — Amber', dark:'#FFB020', light:'#B96E10', role:'CTAs, stat numbers, negative qty'},
+    {name:'Signal — Teal', dark:'#2FD9C0', light:'#177264', role:'Live status, positive qty'},
+    {name:'Line', dark:'rgba(236,230,216,.14)', light:'rgba(18,24,28,.14)', role:'Borders, dividers'},
+  ];
+  const colorGrid = document.getElementById('colorGrid');
+  colorGrid.innerHTML = colors.map(c => `
+    <div class="swatch">
+      <div class="swatch-fill" style="background:${root.getAttribute('data-theme')==='dark' ? c.dark : c.light}"></div>
+      <div class="swatch-meta">
+        <div class="swatch-name">${c.name}</div>
+        <div class="swatch-role">${c.role}</div>
+        <span class="copy" data-copy-dyn="${c.dark}|${c.light}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
+          <span class="hex-label">${root.getAttribute('data-theme')==='dark' ? c.dark : c.light}</span>
+        </span>
+      </div>
+    </div>`).join('');
+
+  // re-render swatches on theme change to show correct hex
+  const obs = new MutationObserver(() => {
+    const mode = root.getAttribute('data-theme');
+    document.querySelectorAll('.swatch').forEach((el,i) => {
+      el.querySelector('.swatch-fill').style.background = mode==='dark' ? colors[i].dark : colors[i].light;
+      const cp = el.querySelector('.copy');
+      const val = mode==='dark' ? colors[i].dark : colors[i].light;
+      cp.setAttribute('data-copy-dyn', `${colors[i].dark}|${colors[i].light}`);
+      cp.querySelector('.hex-label').textContent = val;
+    });
+  });
+  obs.observe(root, {attributes:true, attributeFilter:['data-theme']});
+
+  // type scale
+  const type = [
+    {tag:'Display / H1', family:"'Fraunces', serif", weight:500, size:'clamp(38px,5vw,60px)', line:'1.04', sample:'Every pallet, accounted for.'},
+    {tag:'H2', family:"'Fraunces', serif", weight:500, size:'clamp(28px,3.4vw,40px)', line:'1.12', sample:'Five steps. One record.'},
+    {tag:'H3 / Card title', family:"'Inter', sans-serif", weight:600, size:'17px', line:'1.3', sample:'Real-time inventory'},
+    {tag:'Body / Lede', family:"'Inter', sans-serif", weight:400, size:'17px', line:'1.65', sample:'One real-time record of inventory.'},
+    {tag:'Body / Small', family:"'Inter', sans-serif", weight:400, size:'14px', line:'1.6', sample:'Recommends where SKUs should live.'},
+    {tag:'Eyebrow', family:"'IBM Plex Mono', monospace", weight:600, size:'12px', line:'1', sample:'WAREHOUSE MANAGEMENT SYSTEM'},
+    {tag:'Data / Mono', family:"'IBM Plex Mono', monospace", weight:400, size:'12.5px', line:'1.4', sample:'SKU-4471 · RCV DOCK 3'},
+    {tag:'Stat number', family:"'Fraunces', serif", weight:500, size:'clamp(32px,4vw,48px)', line:'1', sample:'99.98%'},
+  ];
+  document.getElementById('typeScale').innerHTML = type.map(t => `
+    <div class="type-row">
+      <div class="type-tag">${t.tag}</div>
+      <div class="type-sample" style="font-family:${t.family}; font-weight:${t.weight}; font-size:${t.size.includes('clamp')?'32px':t.size}; line-height:${t.line};">${t.sample}</div>
+      <div class="type-specs">
+        ${t.family.replace(/'/g,'')}<br>${t.weight} · ${t.size}<br>line-height ${t.line}
+      </div>
+    </div>`).join('');
+
+  // copy-to-clipboard for all .copy chips
+  function flashCopied(el, original){
+    el.classList.add('copied');
+    const label = el.querySelector('span') ;
+    setTimeout(()=> el.classList.remove('copied'), 1200);
+  }
+  document.addEventListener('click', (e) => {
+    const chip = e.target.closest('.copy');
+    if(!chip) return;
+    let text = chip.getAttribute('data-copy');
+    if(!text && chip.hasAttribute('data-copy-dyn')){
+      const mode = root.getAttribute('data-theme');
+      const [d,l] = chip.getAttribute('data-copy-dyn').split('|');
+      text = mode==='dark' ? d : l;
+    }
+    if(!text) return;
+    navigator.clipboard.writeText(text).then(()=> flashCopied(chip));
+  });
+</script>
+
+</body>
+</html>

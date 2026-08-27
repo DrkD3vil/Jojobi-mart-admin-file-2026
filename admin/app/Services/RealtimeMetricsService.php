@@ -31,7 +31,12 @@ class RealtimeMetricsService
         $this->upsertRow($locationId, [
             'pending_orders' => max(0, $delta), // insert value (doesn't matter much)
         ], [
-            'pending_orders' => DB::raw("GREATEST(0, pending_orders + ($delta))"),
+            // pending_orders is UNSIGNED, so "pending_orders + (-1)" when the
+            // column is already 0 makes MySQL evaluate a negative unsigned
+            // intermediate value and throw 1690 ("out of range") before
+            // GREATEST(0, ...) ever gets a chance to clamp it. Casting to
+            // SIGNED first lets the subtraction go negative safely.
+            'pending_orders' => DB::raw("GREATEST(0, CAST(pending_orders AS SIGNED) + ($delta))"),
             'updated_at' => now(),
         ]);
     }
@@ -43,7 +48,8 @@ class RealtimeMetricsService
         $this->upsertRow($locationId, [
             'low_stock_items' => max(0, $delta),
         ], [
-            'low_stock_items' => DB::raw("GREATEST(0, low_stock_items + ($delta))"),
+            // Same UNSIGNED-underflow issue as incPending() above.
+            'low_stock_items' => DB::raw("GREATEST(0, CAST(low_stock_items AS SIGNED) + ($delta))"),
             'updated_at' => now(),
         ]);
     }

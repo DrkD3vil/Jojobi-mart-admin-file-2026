@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-    <div class="page-header animate-fade-in">
+    <div class="page-header animate-fade-in" data-reveal>
         <div class="header-content">
             <h2 class="page-title">Create New Product</h2>
             <p class="page-subtitle">Add a new product to your inventory</p>
@@ -47,7 +47,7 @@
          {{-- @if(auth()->user()->hasPrivilege('add-product')) --}}
          @if(auth()->user()->hasPrivilegeAccessKey('products'))
     <h2>Access Key</h2>
-    <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" class="animate-slide-up">
+    <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" class="animate-slide-up" data-reveal>
         @csrf
 
         @include('products._form')
@@ -94,18 +94,18 @@
 .page-title {
     font-size: 2rem;
     font-weight: 700;
-    color: var(--text-primary, oklch(0.985 0 0));
+    color: var(--foreground);
     margin-bottom: 0.5rem;
     background: linear-gradient(135deg,
-        var(--text-primary, oklch(0.985 0 0)),
-        var(--text-secondary, oklch(0.708 0 0)));
+        var(--foreground),
+        var(--muted-foreground));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
 .page-subtitle {
-    color: var(--text-secondary, oklch(0.708 0 0));
+    color: var(--muted-foreground);
     font-size: 1rem;
     font-weight: 500;
 }
@@ -117,7 +117,7 @@
     justify-content: flex-end;
     margin-top: 2rem;
     padding-top: 1.5rem;
-    border-top: 1px solid var(--border-color, oklch(0.9 0 0));
+    border-top: 1px solid var(--border);
 }
 
 /* Responsive Design */
@@ -181,52 +181,52 @@
 }
 
 .animate-fade-in {
-    animation: fadeIn var(--transition-normal, 250ms) ease-out;
+    animation: fadeIn var(--transition-normal) ease-out;
 }
 
 .animate-slide-up {
-    animation: slideUp var(--transition-normal, 250ms) ease-out;
+    animation: slideUp var(--transition-normal) ease-out;
 }
 
 .animate-slide-in {
-    animation: slideIn var(--transition-normal, 250ms) ease-out;
+    animation: slideIn var(--transition-normal) ease-out;
 }
 
 .animate-fade-in-delay {
-    animation: fadeIn var(--transition-normal, 250ms) ease-out 0.2s both;
+    animation: fadeIn var(--transition-normal) ease-out 0.2s both;
 }
 
 .animate-slide-up-delay {
-    animation: slideUp var(--transition-normal, 250ms) ease-out 0.2s both;
+    animation: slideUp var(--transition-normal) ease-out 0.2s both;
 }
 
 /* Optional: Enhanced page header with theme colors */
 .page-header.enhanced {
     padding: 1.5rem;
-    border-radius: var(--radius, 12px);
-    background: var(--card, oklch(0.205 0 0));
-    border: 1px solid var(--border-color, oklch(0.9 0 0));
-    box-shadow: var(--card-shadow, 0 10px 30px rgba(0, 0, 0, .06));
+    border-radius: var(--radius);
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: var(--card-shadow);
 }
 
 .page-header.enhanced .page-title {
     background: linear-gradient(135deg,
-        var(--text-primary, oklch(0.985 0 0)),
-        var(--accent-color, oklch(0.488 0.243 264.376)));
+        var(--foreground),
+        var(--accent-color));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
 .page-header.enhanced .page-subtitle {
-    color: var(--text-muted, oklch(0.708 0 0 / 0.7));
+    color: var(--muted-foreground);
 }
 
 .page-header.glass {
     backdrop-filter: blur(10px);
-    background: var(--glass-base, rgba(255, 255, 255, 0.85));
-    border: 1px solid var(--border-color, oklch(0.9 0 0));
-    border-radius: var(--radius, 12px);
+    background: var(--glass-base);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
     padding: 1.5rem;
 }
 
@@ -244,33 +244,33 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.75rem 1.25rem;
-    border-radius: var(--radius, 12px);
+    border-radius: var(--radius);
     font-weight: 600;
     text-decoration: none;
-    transition: all var(--transition-fast, 150ms) ease;
+    transition: all var(--transition-fast) ease;
     border: 1px solid transparent;
 }
 
 .header-btn.primary {
-    background: var(--accent-color, oklch(0.488 0.243 264.376));
-    color: var(--sidebar-primary-foreground, #fff);
+    background: var(--accent-color);
+    color: var(--sidebar-primary-foreground);
 }
 
 .header-btn.primary:hover {
-    background: var(--accent-hover, oklch(0.488 0.243 264.376 / 0.8));
+    background: color-mix(in oklch, var(--accent-color) 85%, transparent);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px var(--accent-glow, rgba(37, 99, 235, .2));
+    box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 .header-btn.secondary {
-    background: var(--accent, oklch(0.269 0 0));
-    border-color: var(--border-color, oklch(0.9 0 0));
-    color: var(--text-primary, oklch(0.985 0 0));
+    background: var(--secondary);
+    border-color: var(--border);
+    color: var(--foreground);
 }
 
 .header-btn.secondary:hover {
-    background: var(--bg-tertiary, oklch(0.269 0 0));
-    border-color: var(--accent-color, oklch(0.488 0.243 264.376));
+    background: var(--accent);
+    border-color: var(--accent-color);
     transform: translateY(-1px);
 }
 
@@ -287,7 +287,7 @@
     gap: 0.5rem;
     margin-bottom: 0.75rem;
     font-size: 0.9rem;
-    color: var(--text-muted, oklch(0.708 0 0 / 0.7));
+    color: var(--muted-foreground);
 }
 
 .breadcrumb-item {
@@ -299,22 +299,22 @@
 .breadcrumb-item:not(:last-child)::after {
     content: "/";
     margin-left: 0.5rem;
-    color: var(--text-muted, oklch(0.708 0 0 / 0.7));
+    color: var(--muted-foreground);
 }
 
 .breadcrumb-link {
-    color: var(--text-secondary, oklch(0.708 0 0));
+    color: var(--muted-foreground);
     text-decoration: none;
-    transition: color var(--transition-fast, 150ms) ease;
+    transition: color var(--transition-fast) ease;
 }
 
 .breadcrumb-link:hover {
-    color: var(--accent-color, oklch(0.488 0.243 264.376));
+    color: var(--accent-color);
     text-decoration: underline;
 }
 
 .breadcrumb-current {
-    color: var(--text-primary, oklch(0.985 0 0));
+    color: var(--foreground);
     font-weight: 600;
 }
 
@@ -337,21 +337,21 @@
 }
 
 .status-badge.active {
-    background: rgba(34, 197, 94, 0.1);
-    color: var(--success, #16a34a);
-    border: 1px solid rgba(34, 197, 94, 0.2);
+    background: color-mix(in oklch, var(--success) 12%, var(--card));
+    color: var(--success);
+    border: 1px solid color-mix(in oklch, var(--success) 25%, var(--border));
 }
 
 .status-badge.inactive {
-    background: rgba(107, 114, 128, 0.1);
-    color: var(--text-muted, #6b7280);
-    border: 1px solid rgba(107, 114, 128, 0.2);
+    background: color-mix(in oklch, var(--muted-foreground) 12%, var(--card));
+    color: var(--muted-foreground);
+    border: 1px solid color-mix(in oklch, var(--muted-foreground) 25%, var(--border));
 }
 
 .status-badge.warning {
-    background: rgba(245, 158, 11, 0.1);
-    color: var(--warning, #b45309);
-    border: 1px solid rgba(245, 158, 11, 0.2);
+    background: color-mix(in oklch, var(--warning) 12%, var(--card));
+    color: var(--warning);
+    border: 1px solid color-mix(in oklch, var(--warning) 25%, var(--border));
 }
 
 /* Focus styles for accessibility */
@@ -359,7 +359,7 @@
 .page-header a:focus,
 .form-actions button:focus,
 .form-actions a:focus {
-    outline: 2px solid var(--ring, oklch(0.556 0 0));
+    outline: 2px solid var(--ring);
     outline-offset: 2px;
 }
 </style>

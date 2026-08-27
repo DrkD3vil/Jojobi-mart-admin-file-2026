@@ -16,8 +16,8 @@
         </div>
 
         {{-- Stats Cards --}}
-        <div class="stats-grid animate-slide-up">
-            <div class="stat-card glass-effect">
+        <div class="stats-grid animate-slide-up" data-reveal-group>
+            <div class="stat-card glass-effect" data-reveal>
                 <div class="stat-icon">
                     <svg viewBox="0 0 24 24">
                         <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" />
@@ -29,7 +29,7 @@
                 </div>
             </div>
 
-            <div class="stat-card glass-effect">
+            <div class="stat-card glass-effect" data-reveal>
                 <div class="stat-icon active">
                     <svg viewBox="0 0 24 24">
                         <path
@@ -42,7 +42,7 @@
                 </div>
             </div>
 
-            <div class="stat-card glass-effect">
+            <div class="stat-card glass-effect" data-reveal>
                 <div class="stat-icon inactive">
                     <svg viewBox="0 0 24 24">
                         <path
@@ -57,7 +57,7 @@
         </div>
 
         {{-- Brands Table --}}
-        <div class="card glass-effect animate-slide-up-delay">
+        <div class="card glass-effect animate-slide-up-delay" data-reveal>
             <div class="card-header">
                 <h3 class="card-title">All Brands</h3>
                 <div class="card-actions">
@@ -251,7 +251,7 @@
         }
 
         .animate-fade-in-row {
-            animation: fadeInRow 0.3s ease-out;
+            animation: fadeInRow var(--transition-normal, 250ms) ease-out;
         }
 
         /* Layout */
@@ -598,7 +598,7 @@
             background: var(--sidebar-primary-foreground, #fff);
             border-radius: 50%;
             transition: transform var(--transition-normal, 250ms) ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--card-shadow, 0 2px 4px rgba(0, 0, 0, 0.1));
         }
 
         .status-toggle-input:checked+.status-toggle-label .status-toggle-track {
@@ -681,7 +681,7 @@
 
         .btn-action:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--card-shadow-hover, 0 4px 12px rgba(0, 0, 0, 0.1));
         }
 
         .btn-action.edit:hover {
@@ -827,7 +827,7 @@
 
         /* Enhanced table row animation */
         .data-table tbody tr {
-            animation: fadeInRow 0.3s ease-out;
+            animation: fadeInRow var(--transition-normal, 250ms) ease-out;
             animation-fill-mode: both;
         }
 
@@ -1014,21 +1014,21 @@
         }
 
         .status-badge.active {
-            background: rgba(34, 197, 94, 0.1);
+            background: color-mix(in oklch, var(--success, #16a34a) 18%, var(--card, transparent));
             color: var(--success, #16a34a);
-            border-color: rgba(34, 197, 94, 0.2);
+            border-color: color-mix(in oklch, var(--success, #16a34a) 35%, transparent);
         }
 
         .status-badge.inactive {
-            background: rgba(239, 68, 68, 0.1);
+            background: color-mix(in oklch, var(--danger, #b91c1c) 18%, var(--card, transparent));
             color: var(--danger, #b91c1c);
-            border-color: rgba(239, 68, 68, 0.2);
+            border-color: color-mix(in oklch, var(--danger, #b91c1c) 35%, transparent);
         }
 
         .status-badge.pending {
-            background: rgba(245, 158, 11, 0.1);
+            background: color-mix(in oklch, var(--warning, #b45309) 18%, var(--card, transparent));
             color: var(--warning, #b45309);
-            border-color: rgba(245, 158, 11, 0.2);
+            border-color: color-mix(in oklch, var(--warning, #b45309) 35%, transparent);
         }
     </style>
 

@@ -18,7 +18,7 @@
   PAGE: HTML
 ======================= --}}
     <div class="container">
-        <div class="page-header animate-slide-up">
+        <div class="page-header animate-slide-up" data-reveal>
             <div class="header-content">
                 <h1 class="page-title">Edit Product</h1>
                 <p class="page-subtitle">{{ $product->name }}</p>
@@ -238,7 +238,7 @@
 
             .status-badge:hover {
                 transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                box-shadow: var(--card-shadow-hover);
             }
 
             .status-badge svg {
@@ -247,27 +247,27 @@
             }
 
             .status-badge.active {
-                background: rgba(34, 197, 94, 0.15);
+                background: color-mix(in oklch, var(--success, #16a34a) 15%, transparent);
                 color: var(--success, #16a34a);
-                border-color: rgba(34, 197, 94, 0.3);
+                border-color: color-mix(in oklch, var(--success, #16a34a) 30%, transparent);
             }
 
             .status-badge.inactive {
-                background: rgba(107, 114, 128, 0.15);
+                background: color-mix(in oklch, var(--text-muted, #6b7280) 15%, transparent);
                 color: var(--text-muted, #6b7280);
-                border-color: rgba(107, 114, 128, 0.3);
+                border-color: color-mix(in oklch, var(--text-muted, #6b7280) 30%, transparent);
             }
 
             .status-badge.warning {
-                background: rgba(245, 158, 11, 0.15);
+                background: color-mix(in oklch, var(--warning, #b45309) 15%, transparent);
                 color: var(--warning, #b45309);
-                border-color: rgba(245, 158, 11, 0.3);
+                border-color: color-mix(in oklch, var(--warning, #b45309) 30%, transparent);
             }
 
             .status-badge.info {
-                background: rgba(37, 99, 235, 0.15);
+                background: color-mix(in oklch, var(--accent-color, #2563eb) 15%, transparent);
                 color: var(--accent-color, #2563eb);
-                border-color: rgba(37, 99, 235, 0.3);
+                border-color: color-mix(in oklch, var(--accent-color, #2563eb) 30%, transparent);
             }
 
             /* Header Actions */
@@ -322,7 +322,7 @@
                 background: var(--accent, oklch(0.269 0 0));
                 border-color: var(--accent-color, oklch(0.488 0.243 264.376));
                 transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                box-shadow: var(--card-shadow-hover);
             }
 
             /* Form Actions (for bottom of form) */
@@ -1023,7 +1023,7 @@
 
         .pf-imgmgr-btn:hover {
             border-color: var(--accent);
-            box-shadow: 0 10px 22px rgba(0, 0, 0, .08);
+            box-shadow: var(--card-shadow-hover);
             transform: translateY(-1px);
         }
 
@@ -1041,7 +1041,7 @@
 
         .pf-imgmgr-btn.danger:hover {
             border-color: var(--danger);
-            background: rgba(239, 68, 68, .1);
+            background: color-mix(in oklch, var(--danger) 10%, transparent);
         }
 
         .pf-imgmgr-body {
@@ -1231,7 +1231,7 @@
 
         .pf-imgmgr-icon:hover {
             transform: translateY(-1px);
-            box-shadow: 0 10px 18px rgba(0, 0, 0, .08);
+            box-shadow: var(--card-shadow-hover);
             border-color: var(--accent);
         }
 

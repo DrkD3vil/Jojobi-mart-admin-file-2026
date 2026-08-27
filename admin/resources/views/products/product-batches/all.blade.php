@@ -51,7 +51,7 @@
         .pbx-icon {
             width: 56px;
             height: 56px;
-            border-radius: 18px;
+            border-radius: calc(var(--radius) + 4px);
             background: linear-gradient(135deg, var(--accent-color), var(--info));
             display: flex;
             align-items: center;
@@ -64,7 +64,7 @@
             content: "";
             position: absolute;
             inset: -2px;
-            border-radius: 20px;
+            border-radius: calc(var(--radius) + 6px);
             background: radial-gradient(circle at 30% 30%, var(--accent-glow), transparent 55%);
             filter: blur(10px);
             opacity: .9;
@@ -243,7 +243,7 @@
         .pbx-stat__icon {
             width: 44px;
             height: 44px;
-            border-radius: 16px;
+            border-radius: calc(var(--radius) + 2px);
             background: color-mix(in oklch, var(--accent-color) 16%, transparent);
             display: flex;
             align-items: center;
@@ -450,7 +450,7 @@
         .pbx-thumb {
             width: 40px;
             height: 40px;
-            border-radius: 14px;
+            border-radius: var(--radius);
             overflow: hidden;
             border: 1px solid var(--border-color);
             background: color-mix(in oklch, var(--muted) 65%, transparent);
@@ -555,7 +555,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 10px;
+            border-radius: calc(var(--radius) - 2px);
             font-weight: 950;
             border: 1px solid var(--border-color);
             background: color-mix(in oklch, var(--glass-base) 70%, transparent);
@@ -721,7 +721,7 @@
 
         /* Skeleton */
         .pbx-skel .sk {
-            border-radius: 14px;
+            border-radius: var(--radius);
             border: 1px solid var(--border-color);
             background: linear-gradient(90deg,
                     color-mix(in oklch, var(--muted) 35%, transparent),
@@ -986,7 +986,7 @@
                     </svg>
                 </div>
                 <div class="pbx-stat__body">
-                    <div class="pbx-stat__value">${{ number_format($metrics['total_stock_value'], 2) }}</div>
+                    <div class="pbx-stat__value">৳{{ number_format($metrics['total_stock_value'], 2) }}</div>
                     <div class="pbx-stat__label">Stock Value (page)</div>
                 </div>
             </article>
@@ -1235,13 +1235,13 @@
                                     <td>
                                         <div class="pbx-price">
                                             <div class="pbx-line"><span>Buy</span><b
-                                                    class="pbx-mono">${{ number_format($batch->buy_price, 2) }}</b></div>
+                                                    class="pbx-mono">৳{{ number_format($batch->buy_price, 2) }}</b></div>
                                             <div class="pbx-line"><span>Sell</span><b
-                                                    class="pbx-mono">${{ number_format($batch->original_sell_price, 2) }}</b>
+                                                    class="pbx-mono">৳{{ number_format($batch->original_sell_price, 2) }}</b>
                                             </div>
                                             @if ($batch->discounted_price)
                                                 <div class="pbx-line"><span>Disc</span><b
-                                                        class="pbx-mono pbx-info">${{ number_format($batch->discounted_price, 2) }}</b>
+                                                        class="pbx-mono pbx-info">৳{{ number_format($batch->discounted_price, 2) }}</b>
                                                 </div>
                                             @endif
                                         </div>
@@ -1251,7 +1251,7 @@
                                         @if ($batch->whole_sell_price)
                                             <div class="pbx-price">
                                                 <div class="pbx-line"><span>Price</span><b
-                                                        class="pbx-mono">${{ number_format($batch->whole_sell_price, 2) }}</b>
+                                                        class="pbx-mono">৳{{ number_format($batch->whole_sell_price, 2) }}</b>
                                                 </div>
                                                 <div class="pbx-line"><span>Qty</span><b
                                                         class="pbx-mono">{{ number_format($batch->whole_sell_min_qty ?? 0, 2) }}–{{ number_format($batch->whole_sell_max_qty ?? 0, 2) }}</b>
@@ -1424,7 +1424,7 @@
         .pbx-icon {
             width: 56px;
             height: 56px;
-            border-radius: 18px;
+            border-radius: calc(var(--radius) + 4px);
             background: linear-gradient(135deg, var(--accent-color), var(--info));
             display: flex;
             align-items: center;
@@ -1437,7 +1437,7 @@
             content: "";
             position: absolute;
             inset: -2px;
-            border-radius: 20px;
+            border-radius: calc(var(--radius) + 6px);
             background: radial-gradient(circle at 30% 30%, var(--accent-glow), transparent 55%);
             filter: blur(10px);
             opacity: .9;
@@ -1614,7 +1614,7 @@
         .pbx-stat__icon {
             width: 44px;
             height: 44px;
-            border-radius: 16px;
+            border-radius: calc(var(--radius) + 2px);
             background: color-mix(in oklch, var(--accent-color) 16%, transparent);
             display: flex;
             align-items: center;
@@ -1814,7 +1814,7 @@
         .pbx-thumb {
             width: 40px;
             height: 40px;
-            border-radius: 14px;
+            border-radius: var(--radius);
             overflow: hidden;
             border: 1px solid var(--border-color);
             background: color-mix(in oklch, var(--muted) 65%, transparent);
@@ -1915,7 +1915,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 10px;
+            border-radius: calc(var(--radius) - 2px);
             font-weight: 950;
             border: 1px solid var(--border-color);
             background: color-mix(in oklch, var(--glass-base) 70%, transparent);
@@ -2123,7 +2123,7 @@
 
         /* Skeleton */
         .pbx-skel .sk {
-            border-radius: 14px;
+            border-radius: var(--radius);
             border: 1px solid var(--border-color);
             background: linear-gradient(90deg,
                     color-mix(in oklch, var(--muted) 35%, transparent),

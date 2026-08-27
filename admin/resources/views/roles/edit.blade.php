@@ -39,7 +39,7 @@
         </nav>
 
         <!-- Header -->
-        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 p-6 mb-8 shadow-[var(--card-shadow)]">
+        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 p-6 mb-8 shadow-[var(--card-shadow)]" data-reveal>
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div class="flex-1">
                     <div class="flex items-center gap-3 mb-3">
@@ -67,7 +67,7 @@
                         </div>
                         <div class="p-3 bg-[var(--bg-tertiary)] rounded-xl">
                             <p class="text-xs text-[var(--text-secondary)]">Last Updated</p>
-                            <p class="text-sm font-medium text-[var(--text-primary)]">{{ $role->updated_at->diffForHumans() }}</p>
+                            <p class="text-sm font-medium text-[var(--text-primary)]">{{ $role->updated_at?->diffForHumans() ?? '—' }}</p>
                         </div>
                         <div class="p-3 bg-[var(--bg-tertiary)] rounded-xl">
                             <p class="text-xs text-[var(--text-secondary)]">Current Permissions</p>
@@ -98,7 +98,7 @@
             @method('PUT')
 
             <!-- Basic Information Card -->
-            <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] hover:shadow-[var(--card-shadow-hover)] transition-all duration-500">
+            <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] hover:shadow-[var(--card-shadow-hover)] transition-all duration-500" data-reveal>
                 <div class="border-b border-[var(--border-color)]/30 px-6 py-4 bg-gradient-to-r from-[var(--bg-tertiary)] to-[var(--bg-tertiary)]/50">
                     <h2 class="text-xl font-semibold text-[var(--text-primary)] flex items-center gap-3">
                         <svg class="w-5 h-5 text-[var(--accent-color)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,7 +190,7 @@
             </div>
 
             <!-- Permissions Card -->
-            <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] hover:shadow-[var(--card-shadow-hover)] transition-all duration-500">
+            <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] hover:shadow-[var(--card-shadow-hover)] transition-all duration-500" data-reveal>
                 <div class="border-b border-[var(--border-color)]/30 px-6 py-4 bg-gradient-to-r from-[var(--bg-tertiary)] to-[var(--bg-tertiary)]/50">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <h2 class="text-xl font-semibold text-[var(--text-primary)] flex items-center gap-3">
@@ -353,7 +353,7 @@
             </div>
 
             <!-- Form Actions -->
-            <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 p-6">
+            <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 p-6" data-reveal>
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-2">Save Changes</h3>
@@ -638,7 +638,7 @@ document.addEventListener('DOMContentLoaded', function() {
         background: var(--glass-base);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--border-color);
     }
 
     .btn-primary {
@@ -654,7 +654,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     /* Custom checkbox animation */
     input[type="checkbox"]:checked + label {
-        animation: checkAnim 0.3s ease;
+        animation: checkAnim var(--transition-normal) ease;
     }
 
     @keyframes checkAnim {

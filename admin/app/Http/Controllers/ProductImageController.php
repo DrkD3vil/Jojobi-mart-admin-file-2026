@@ -29,18 +29,69 @@ class ProductImageController extends Controller
     }
 
     // Global all page
-    public function all()
+    public function all(Request $request)
     {
-        $images = ProductImage::with(['product' => fn ($q) => $q->withTrashed()])
-            ->latest()
-            ->paginate(20);
+        $query = ProductImage::with(['product' => fn ($q) => $q->withTrashed()]);
+
+        $search = trim((string) $request->query('q', ''));
+        if ($search !== '') {
+            $query->whereHas('product', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+
+        $filter = $request->query('filter', 'all');
+        if ($filter === 'primary') {
+            $query->where('is_primary', true);
+        } elseif ($filter === 'no_primary') {
+            $query->where('is_primary', false);
+        } elseif ($filter === 'orphan') {
+            $query->whereDoesntHave('product');
+        }
+
+        $sort = $request->query('sort', 'newest');
+        $query->orderBy('created_at', $sort === 'oldest' ? 'asc' : 'desc');
+
+        $perPage = (int) $request->query('per_page', 24);
+        $perPage = in_array($perPage, [12, 24, 48, 96], true) ? $perPage : 24;
+
+        $images = $query->paginate($perPage)->withQueryString();
 
         $trashedImageCount = ProductImage::onlyTrashed()->count();
 
         // Orphans count (product hard-deleted)
         $orphanCount = ProductImage::whereDoesntHave('product')->count();
 
-        return view('products.products_images.all', compact('images', 'trashedImageCount', 'orphanCount'));
+        // Primary count (real stat, not a placeholder)
+        $primaryCount = ProductImage::where('is_primary', true)->count();
+
+        $totalImageCount = ProductImage::count();
+
+        return view('products.products_images.all', compact(
+            'images', 'trashedImageCount', 'orphanCount', 'primaryCount', 'totalImageCount', 'search', 'filter', 'sort', 'perPage'
+        ));
+    }
+
+    /**
+     * Bulk soft-delete (move to trash) a set of images by id.
+     * POST /product-images/bulk-trash
+     */
+    public function bulkTrash(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        $items = ProductImage::whereIn('id', $request->input('ids'))->get();
+
+        foreach ($items as $item) {
+            $item->delete();
+        }
+
+        $count = $items->count();
+
+        return back()->with('success', $count . ' image' . ($count === 1 ? '' : 's') . ' moved to trash.');
     }
 
     /**
@@ -51,7 +102,7 @@ class ProductImageController extends Controller
     {
         $request->validate([
             'images'   => 'required|array',
-            'images.*' => 'required|image|max:5120',
+            'images.*' => 'required|image|max:10240',
         ]);
 
         foreach ($request->file('images') as $index => $image) {

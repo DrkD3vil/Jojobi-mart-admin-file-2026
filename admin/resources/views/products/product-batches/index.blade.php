@@ -166,12 +166,12 @@
                     <thead>
                         <tr>
                             <th>Batch</th>
-                            <th class="text-end">Buy</th>
-                            <th class="text-end">Sell</th>
-                            <th class="text-end">Qty</th>
+                            <th class="text-end text-right">Buy</th>
+                            <th class="text-end text-right">Sell</th>
+                            <th class="text-end text-right">Qty</th>
                             <th>Expiry</th>
                             <th>Status</th>
-                            <th class="text-end" style="width: 120px;">Action</th>
+                            <th class="text-end text-right" style="width: 120px;">Action</th>
                         </tr>
                     </thead>
 
@@ -199,11 +199,11 @@
                                     </div>
                                 </td>
 
-                                <td class="text-end ui-mono">
+                                <td class="text-end text-right ui-mono">
                                     {{ number_format((float) $batch->buy_price, 2) }}
                                 </td>
 
-                                <td class="text-end ui-mono">
+                                <td class="text-end text-right ui-mono">
                                     {{ number_format((float) $batch->sell_price, 2) }}
                                     @if ($batch->discounted_price || $batch->discount_percentage)
                                         <div class="small ui-muted">
@@ -216,7 +216,7 @@
                                     @endif
                                 </td>
 
-                                <td class="text-end ui-mono">
+                                <td class="text-end text-right ui-mono">
                                     {{ number_format((float) $batch->quantity, 3) }}
                                     @if ((float) $batch->quantity <= 0)
                                         <div class="small text-danger">Out of stock</div>
@@ -257,8 +257,8 @@
                                     </div>
                                 </td>
 
-                                <td class="text-end">
-                                    <div class="d-inline-flex gap-2">
+                                <td class="text-end text-right">
+                                    <div class="d-inline-flex inline-flex gap-2" style="gap: 0.5rem; justify-content: flex-end;">
                                         <a href="{{ route('product.batches.edit', $batch) }}"
                                             class="btn ui-btn ui-btn-secondary btn-sm">
                                             <i class="bi bi-pencil"></i>

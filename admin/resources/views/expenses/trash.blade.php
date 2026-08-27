@@ -123,7 +123,7 @@
               <th class="details-col">
                 <span>Details</span>
               </th>
-              <th class="amount-col">
+              <th class="amount-col text-right">
                 <span>Amount</span>
               </th>
               <th class="deleted-col">
@@ -160,7 +160,7 @@
                     @endif
                   </div>
                 </td>
-                <td class="amount-cell">
+                <td class="amount-cell text-right">
                   <div class="amount-content">
                     <span class="amount-value">{{ number_format((float)$e->amount, 2) }}</span>
                     <span class="amount-currency">{{ $e->currency }}</span>
@@ -554,7 +554,7 @@
   .amount-content {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: flex-end;
   }
 
   .amount-value {

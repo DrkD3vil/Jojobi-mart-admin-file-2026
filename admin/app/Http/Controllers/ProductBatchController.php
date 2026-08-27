@@ -124,7 +124,7 @@ class ProductBatchController extends Controller
     /**
      * Show form to create a new batch
      */
-    public function create(Product $product = null)
+    public function create(?Product $product = null)
     {
         $products = Product::query()
             ->select(['id', 'name', 'barcode'])
@@ -222,11 +222,15 @@ class ProductBatchController extends Controller
             }
 
             // ✅ Ensure gift product has stock (location-based)
+            // NOTE: BatchStock::batch() intentionally uses withTrashed() (for historical
+            // order/return lookups), so we must explicitly exclude soft-deleted batches
+            // here or an archived batch's leftover on_hand could wrongly pass this check.
             $hasGiftStock = BatchStock::query()
                 ->where('on_hand', '>', 0)
                 ->whereHas('batch', function ($q) use ($validated) {
                     $q->where('product_id', (int)$validated['free_product_id'])
-                        ->where('is_active', true);
+                        ->where('is_active', true)
+                        ->whereNull('product_batches.deleted_at');
                 })
                 ->exists();
 
@@ -269,7 +273,9 @@ class ProductBatchController extends Controller
                 $validated['discount_percentage'] = null;
             }
 
-            $sellPrice = round($sellPrice, 4);
+            // ✅ Guard against a fixed discount amount exceeding the original price,
+            // which would otherwise persist a negative sell_price (charged at checkout).
+            $sellPrice = round(max(0, $sellPrice), 4);
 
             // ✅ Create batch
             $batch = ProductBatch::create([
@@ -502,11 +508,14 @@ class ProductBatchController extends Controller
                         }
 
                         // ✅ Gift stock exists (location based)
+                        // NOTE: BatchStock::batch() intentionally uses withTrashed(), so
+                        // exclude soft-deleted batches explicitly here.
                         $hasGiftStock = BatchStock::query()
                             ->where('on_hand', '>', 0)
                             ->whereHas('batch', function ($q) use ($freeProductId) {
                                 $q->where('product_id', (int) $freeProductId)
-                                    ->where('is_active', true);
+                                    ->where('is_active', true)
+                                    ->whereNull('product_batches.deleted_at');
                             })
                             ->exists();
 
@@ -524,22 +533,30 @@ class ProductBatchController extends Controller
                 $newLocationId = (int) $validated['location_id'];
                 $newQty        = (float) $validated['quantity'];
 
+                // ✅ Must match on (product_batch_id, location_id) — batch_stocks has a
+                // UNIQUE constraint on that pair (batch_stock_unique), and a batch can
+                // have a stock row per active location (see store()). Previously this
+                // grabbed ANY row for the batch and rewrote its location_id, which would
+                // throw a duplicate-key error the moment the batch already had a row at
+                // the target location (i.e. as soon as there is more than one active
+                // location), or silently reassign the wrong location's row otherwise.
                 $stock = BatchStock::query()
                     ->where('product_batch_id', $batch->id)
+                    ->where('location_id', $newLocationId)
                     ->lockForUpdate()
                     ->first();
 
                 if (!$stock) {
-                    // ✅ create stock row
+                    // ✅ create stock row for the selected location
                     $stock = BatchStock::create([
                         'product_batch_id' => $batch->id,
                         'location_id'      => $newLocationId,
                         'on_hand'          => $newQty,
+                        'reserved'         => 0,
                     ]);
                 } else {
-                    // ✅ update location + on_hand
-                    $stock->location_id = $newLocationId;
-                    $stock->on_hand     = $newQty;
+                    // ✅ update on_hand for this location only
+                    $stock->on_hand = $newQty;
                     $stock->save();
                 }
 
@@ -574,6 +591,21 @@ class ProductBatchController extends Controller
 
     public function destroy(ProductBatch $batch)
     {
+        // ✅ Soft-deleting a batch removes it from every stock aggregate in the app
+        // (ProductBatch's default scope + Product::batches() both exclude trashed
+        // batches), but does NOT touch its batch_stocks rows. Without this guard,
+        // archiving a batch that still has on_hand stock silently "loses" that
+        // quantity from all inventory/valuation views with no ledger trail.
+        $onHand = (float) BatchStock::where('product_batch_id', $batch->id)->sum('on_hand');
+
+        if ($onHand > 0) {
+            return back()->with(
+                'error',
+                'Cannot delete this batch: it still has ' . rtrim(rtrim(number_format($onHand, 4), '0'), '.') .
+                ' unit(s) in stock. Transfer or zero out the stock first.'
+            );
+        }
+
         $batch->delete();
         return back()->with('success', 'Batch deleted successfully');
     }

@@ -3,7 +3,7 @@
 @section('content')
 <div class="container animate-fade-in">
 
-    <div class="page-header mb-4">
+    <div class="page-header mb-4" data-reveal>
         <div class="header-content">
             <h1 class="page-title">Image Trash</h1>
             <p class="page-subtitle">Restore or permanently delete images</p>
@@ -36,7 +36,7 @@
     @if(session('info'))    <div class="alert alert-info">{{ session('info') }}</div> @endif
     @if(session('error'))   <div class="alert alert-danger">{{ session('error') }}</div> @endif
 
-    <div class="cardx animate-slide-up">
+    <div class="cardx animate-slide-up" data-reveal>
         <div class="cardx-hd">
             <div>
                 <h2 class="title">Trashed Images</h2>
@@ -59,7 +59,7 @@
                         @forelse($images as $img)
                             <tr>
                                 <td>
-                                    <img src="{{ asset('storage/'.$img->image_path) }}" width="80" style="border-radius:10px;">
+                                    <img src="{{ asset('storage/'.$img->image_path) }}" width="80" style="border-radius:var(--radius);">
                                 </td>
                                 <td>
                                     {{ $img->product?->name ?? 'Product deleted' }}

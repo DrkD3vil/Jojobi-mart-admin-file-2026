@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTimeline;
 use Illuminate\Database\Eloquent\Model;
 
 class Cart extends Model
 {
-    //
+    use HasTimeline;
 
     protected $fillable = [
         'session_id',

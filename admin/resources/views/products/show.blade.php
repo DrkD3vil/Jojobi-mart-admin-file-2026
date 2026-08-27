@@ -1579,11 +1579,11 @@
                                             <div class="price-info">
                                                 <div class="price-item">
                                                     <span class="price-label">Buy Price</span>
-                                                    <span class="price-value">${{ number_format($batch->buy_price, 2) }}</span>
+                                                    <span class="price-value">৳{{ number_format($batch->buy_price, 2) }}</span>
                                                 </div>
                                                 <div class="price-item">
                                                     <span class="price-label">Sell Price</span>
-                                                    <span class="price-value">${{ number_format($batch->sell_price, 2) }}</span>
+                                                    <span class="price-value">৳{{ number_format($batch->sell_price, 2) }}</span>
                                                 </div>
                                                 <div class="price-item">
                                                     <span class="price-label">Margin</span>
@@ -1628,16 +1628,16 @@
                                                 <h6>Pricing</h6>
                                                 <div class="detail-row">
                                                     <span class="detail-label">Buy Price:</span>
-                                                    <span class="detail-value">${{ number_format($batch->buy_price, 2) }}</span>
+                                                    <span class="detail-value">৳{{ number_format($batch->buy_price, 2) }}</span>
                                                 </div>
                                                 <div class="detail-row">
                                                     <span class="detail-label">Sell Price:</span>
-                                                    <span class="detail-value">${{ number_format($batch->sell_price, 2) }}</span>
+                                                    <span class="detail-value">৳{{ number_format($batch->sell_price, 2) }}</span>
                                                 </div>
                                                 <div class="detail-row">
                                                     <span class="detail-label">Margin:</span>
                                                     <span class="detail-value">
-                                                        ${{ number_format($margin, 2) }}
+                                                        ৳{{ number_format($margin, 2) }}
                                                         ({{ number_format($marginPercentage, 1) }}%)
                                                     </span>
                                                 </div>
@@ -1790,7 +1790,7 @@
 
                     <div class="total-value">
                         <div class="value-label">Total Inventory Value</div>
-                        <div class="value-amount">${{ number_format($totalValue, 2) }}</div>
+                        <div class="value-amount">৳{{ number_format($totalValue, 2) }}</div>
                     </div>
                 </div>
             </div>
@@ -2348,8 +2348,9 @@
                 .header h1 { margin: 0; color: #333; }
                 .header .subtitle { color: #666; margin: 5px 0 20px; }
                 table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; }
-                td { padding: 10px 12px; border-bottom: 1px solid #dee2e6; }
+                th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; text-align: left; }
+                td { padding: 10px 12px; border-bottom: 1px solid #dee2e6; text-align: left; }
+                th.num, td.num { text-align: right; }
                 .total-row { font-weight: bold; background: #f8f9fa; }
                 .expired { color: #dc3545; }
                 .warning { color: #ffc107; }
@@ -2367,10 +2368,10 @@
                 <thead>
                     <tr>
                         <th>Batch No</th>
-                        <th>Quantity</th>
-                        <th>Buy Price</th>
-                        <th>Sell Price</th>
-                        <th>Margin</th>
+                        <th class="num">Quantity</th>
+                        <th class="num">Buy Price</th>
+                        <th class="num">Sell Price</th>
+                        <th class="num">Margin</th>
                         <th>Expiry Date</th>
                         <th>Status</th>
                     </tr>
@@ -2404,10 +2405,10 @@
                         return `
                             <tr>
                                 <td>${batch.batch_no}</td>
-                                <td>${batch.quantity}</td>
-                                <td>$${batch.buy_price.toFixed(2)}</td>
-                                <td>$${batch.sell_price.toFixed(2)}</td>
-                                <td>$${margin.toFixed(2)} (${marginPercent}%)</td>
+                                <td class="num">${batch.quantity}</td>
+                                <td class="num">৳${batch.buy_price.toFixed(2)}</td>
+                                <td class="num">৳${batch.sell_price.toFixed(2)}</td>
+                                <td class="num">৳${margin.toFixed(2)} (${marginPercent}%)</td>
                                 <td>${batch.expiry_date ?? 'N/A'}</td>
                                 <td class="${statusClass}">${status}</td>
                             </tr>
@@ -2416,7 +2417,7 @@
 
                     <tr class="total-row">
                         <td>Total</td>
-                        <td>${batches.reduce((s, b) => s + b.quantity, 0)}</td>
+                        <td class="num">${batches.reduce((s, b) => s + b.quantity, 0)}</td>
                         <td colspan="4"></td>
                         <td>${batches.filter(b => b.quantity > 0).length} active</td>
                     </tr>

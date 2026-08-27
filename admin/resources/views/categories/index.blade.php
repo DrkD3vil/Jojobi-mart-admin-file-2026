@@ -7,7 +7,7 @@
             <p class="page-subtitle">Manage your product categories hierarchy</p>
         </div>
 
-        <div class="header-actions animate-fade-in-delay">
+        <div class="header-actions animate-fade-in-delay" data-reveal>
             <a href="{{ route('categories.create') }}" class="btn-primary btn-icon">
                 <svg viewBox="0 0 24 24">
                     <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
@@ -45,7 +45,7 @@
             </div>
         @endif
 
-        <div class="categories-table-container animate-slide-up">
+        <div class="categories-table-container animate-slide-up" data-reveal>
             <div class="table-responsive">
                 <table class="categories-table">
                     <thead>
@@ -202,7 +202,7 @@
 
         {{-- Custom Pagination --}}
         @if ($categories->hasPages())
-            <div class="px-6 py-4 border-t border-gray-200">
+            <div class="px-6 py-4 border-t" style="border-color: var(--border);" data-reveal>
                 {{-- Use custom pagination --}}
                 {{ $categories->links('vendor.pagination.custom') }}
 
@@ -551,7 +551,7 @@
                 color: var(--text-secondary);
                 cursor: pointer;
                 padding: 0.25rem;
-                border-radius: 4px;
+                border-radius: calc(var(--radius) - 2px);
                 transition: all var(--transition-fast);
             }
 
@@ -671,7 +671,7 @@
                 object-fit: contain;
                 background: white;
                 padding: 0.5rem;
-                border-radius: 4px;
+                border-radius: calc(var(--radius) - 2px);
             }
 
             .zoom-hint {

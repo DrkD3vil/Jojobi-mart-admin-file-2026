@@ -5,62 +5,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
 <style>
-/* ===== Your fixed color system (same as before, kept short) ===== */
-:root{
-  --radius:.625rem;
-  --transition-fast:150ms;
-  --transition-normal:250ms;
-
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --border: oklch(1 0 0 / 15%);
-  --input: oklch(1 0 0 / 15%);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-
-  --success: oklch(0.696 0.17 162.48);
-  --warning: oklch(0.769 0.188 70.08);
-  --info: oklch(0.488 0.243 264.376);
-  --danger: oklch(0.704 0.191 22.216);
-
-  --accent-color: var(--sidebar-primary);
-  --accent-hover: oklch(0.488 0.243 264.376 / .85);
-  --accent-glow: oklch(0.488 0.243 264.376 / .2);
-
-  --border-color: var(--border);
-  --bg-tertiary: var(--secondary);
-  --text-secondary: var(--muted-foreground);
-
-  --card-shadow: 0 2px 4px 0 rgb(0 0 0 / .25);
-  --dropdown-shadow: 0 10px 25px -5px rgb(0 0 0 / .4), 0 8px 10px -6px rgb(0 0 0 / .3);
-}
-html[data-theme='light']{
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.12 0 0);
-  --card: oklch(1 0 0);
-  --secondary: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.5 0 0);
-  --border: oklch(0.9 0 0);
-  --input: oklch(0.96 0 0);
-  --sidebar-primary: oklch(0.646 0.222 41.116);
-
-  --success: oklch(0.627 0.194 149.214);
-  --warning: oklch(0.769 0.188 70.08);
-  --info: oklch(0.623 0.214 259.815);
-  --danger: oklch(0.577 0.245 27.325);
-
-  --accent-color: var(--sidebar-primary);
-  --accent-hover: oklch(0.646 0.222 41.116 / .85);
-  --accent-glow: oklch(0.646 0.222 41.116 / .12);
-
-  --border-color: var(--border);
-  --bg-tertiary: var(--secondary);
-
-  --card-shadow: 0 2px 4px 0 rgb(0 0 0 / .08);
-  --dropdown-shadow: 0 10px 25px -5px rgb(0 0 0 / .15), 0 8px 10px -6px rgb(0 0 0 / .1);
-}
+/* Theme tokens (--radius, --background, --sidebar-primary, --success,
+   --card-shadow, --accent-color, --border-color, --bg-tertiary,
+   --text-secondary, etc.) come from the shared design system loaded
+   globally in layouts/app.blade.php — referenced below, not redefined. */
 
 /* ===== Ledger UI ===== */
 .ledg-wrap{max-width:1280px;margin:0 auto;padding:16px;color:var(--foreground);}
@@ -71,7 +19,7 @@ html[data-theme='light']{
 .ledg-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border-color);background:var(--bg-tertiary);padding:8px 10px;border-radius:999px;font-size:.85rem;}
 .ledg-btn{border:1px solid var(--border-color);padding:10px 12px;border-radius:calc(var(--radius) - 2px);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all var(--transition-fast);background:transparent;color:var(--foreground);}
 .ledg-btn:hover{background:var(--bg-tertiary);border-color:var(--accent-color);}
-.ledg-btn-primary{background:var(--accent-color);border-color:transparent;color:#fff;}
+.ledg-btn-primary{background:var(--accent-color);border-color:transparent;color:var(--sidebar-primary-foreground);}
 .ledg-btn-primary:hover{background:var(--accent-hover);box-shadow:0 8px 18px -10px var(--accent-glow);}
 .ledg-card{background:var(--card);border:1px solid var(--border-color);border-radius:var(--radius);padding:14px;box-shadow:var(--card-shadow);margin-bottom:14px;}
 .ledg-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:10px;align-items:end;}
@@ -94,7 +42,7 @@ html[data-theme='light']{
 .ledg-in{background:color-mix(in oklch, var(--success) 30%, var(--card) 70%);}
 .ledg-out{background:color-mix(in oklch, var(--danger) 30%, var(--card) 70%);}
 .ledg-warn{background:color-mix(in oklch, var(--warning) 30%, var(--card) 70%);}
-.ledg-metaBtn{border:1px solid var(--border-color);background:transparent;color:var(--foreground);border-radius:10px;padding:8px 10px;cursor:pointer;}
+.ledg-metaBtn{border:1px solid var(--border-color);background:transparent;color:var(--foreground);border-radius:var(--radius);padding:8px 10px;cursor:pointer;}
 .ledg-metaBtn:hover{background:var(--bg-tertiary);border-color:var(--accent-color);}
 .ledg-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;}
 .ledg-muted{color:var(--text-secondary);font-size:.9rem;}
@@ -105,7 +53,7 @@ html[data-theme='light']{
 .ledg-modalTop{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border-color);}
 .ledg-modalTitle{font-weight:900;display:flex;gap:10px;align-items:center;}
 .ledg-modalBody{padding:14px;}
-.ledg-pre{margin:0;background:color-mix(in oklch, var(--card) 70%, var(--bg-tertiary) 30%);border:1px solid var(--border-color);border-radius:12px;padding:12px;max-height:65vh;overflow:auto;white-space:pre-wrap;word-break:break-word;}
+.ledg-pre{margin:0;background:color-mix(in oklch, var(--card) 70%, var(--bg-tertiary) 30%);border:1px solid var(--border-color);border-radius:calc(var(--radius) + 2px);padding:12px;max-height:65vh;overflow:auto;white-space:pre-wrap;word-break:break-word;}
 </style>
 
 @php
@@ -113,7 +61,7 @@ html[data-theme='light']{
 @endphp
 
 <div class="ledg-wrap">
-  <div class="ledg-top">
+  <div class="ledg-top" data-reveal>
     <div>
       <div class="ledg-title"><i class="fas fa-book"></i> Stock Ledger</div>
       <div class="ledg-sub">Server-side AJAX search + filters + pagination. Click Meta for JSON, export current page.</div>
@@ -128,7 +76,7 @@ html[data-theme='light']{
     </div>
   </div>
 
-  <div class="ledg-card">
+  <div class="ledg-card" data-reveal>
     <div class="ledg-grid">
       <div class="ledg-field">
         <label><i class="fas fa-magnifying-glass"></i> Search</label>
@@ -197,7 +145,7 @@ html[data-theme='light']{
     </div>
   </div>
 
-  <div class="ledg-card">
+  <div class="ledg-card" data-reveal>
     <div class="ledg-tableWrap">
       <table class="ledg-table">
         <thead>
@@ -206,7 +154,7 @@ html[data-theme='light']{
             <th style="width:120px;">Batch</th>
             <th style="width:120px;">Location</th>
             <th style="width:130px;">Direction</th>
-            <th style="width:140px;">Qty</th>
+            <th style="width:140px;" class="text-right">Qty</th>
             <th style="width:220px;">Ref</th>
             <th style="width:120px;">Meta</th>
           </tr>
@@ -227,7 +175,7 @@ html[data-theme='light']{
               <td><b class="ledg-mono">{{ $r->product_batch_id }}</b></td>
               <td><b class="ledg-mono">{{ $r->location_id }}</b></td>
               <td><span class="ledg-badge {{ $badgeClass }}"><i class="fas fa-right-left"></i> {{ $dir }}</span></td>
-              <td><b class="ledg-mono">{{ number_format((float)$r->qty, 4) }}</b></td>
+              <td class="text-right"><b class="ledg-mono">{{ number_format((float)$r->qty, 4) }}</b></td>
               <td>
                 <div class="ledg-mini">Ref</div>
                 <div class="ledg-mono">{{ $r->ref_type ?? '-' }}#{{ $r->ref_id ?? '-' }}</div>
@@ -381,7 +329,7 @@ html[data-theme='light']{
             <td><b class="ledg-mono">${escapeHtml(r.product_batch_id)}</b></td>
             <td><b class="ledg-mono">${escapeHtml(r.location_id)}</b></td>
             <td><span class="ledg-badge ${badgeClass(dir)}"><i class="fas fa-right-left"></i> ${escapeHtml(dir)}</span></td>
-            <td><b class="ledg-mono">${Number(r.qty || 0).toFixed(4)}</b></td>
+            <td class="text-right"><b class="ledg-mono">${Number(r.qty || 0).toFixed(4)}</b></td>
             <td>
               <div class="ledg-mini">Ref</div>
               <div class="ledg-mono">${escapeHtml(ref)}</div>

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTimeline;
 use Illuminate\Database\Eloquent\Model;
 
 class Exchange extends Model
 {
+    use HasTimeline;
+
     protected $fillable = [
         'exchange_no','order_id','customer_id','location_id',
         'status','price_difference',

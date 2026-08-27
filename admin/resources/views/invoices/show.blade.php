@@ -173,7 +173,7 @@
         background: var(--accent-color, oklch(0.488 0.243 264.376));
         color: var(--sidebar-primary-foreground, #fff);
         padding: 8px 12px;
-        border-radius: 10px;
+        border-radius: var(--radius, 0.625rem);
         font-weight: 800;
         cursor: pointer;
         transition: all var(--transition-fast, 150ms) ease;
@@ -332,7 +332,15 @@
 <div class="inv">
     <div class="inv-hd">
         <div>
-            <h3>Invoice</h3>
+            @if (\App\Models\Setting::get('store_name'))
+                <h3>{{ \App\Models\Setting::get('store_name') }}</h3>
+                <div class="muted">
+                    @if (\App\Models\Setting::get('store_address')) {{ \App\Models\Setting::get('store_address') }} • @endif
+                    @if (\App\Models\Setting::get('store_phone')) {{ \App\Models\Setting::get('store_phone') }} @endif
+                </div>
+            @else
+                <h3>Invoice</h3>
+            @endif
             <div class="muted">
                 Order: <b>{{ $order->order_no }}</b> • Date: <b>{{ $order->created_at->format('d M Y, h:i A') }}</b>
             </div>
@@ -340,13 +348,13 @@
 
         <div class="no-print" style="display:flex; gap:10px; align-items:center;">
             <a class="btnx btnx-ghost" href="{{ route('cart.index') }}">Back to POS</a>
-            <button class="btnx" onclick="window.print()">Print</button>
+            <a class="btnx" href="{{ route('invoice.print', $order) }}" target="_blank">Print</a>
         </div>
     </div>
 
     <div style="padding:16px 18px;">
-        <div class="grid2">
-            <div class="box">
+        <div class="grid2" data-reveal-group>
+            <div class="box" data-reveal>
                 <div style="font-weight:900;margin-bottom:6px;">Customer</div>
                 @if($order->customer)
                     <div class="kv"><span>Name</span><b>{{ $order->customer->name }}</b></div>
@@ -358,7 +366,7 @@
                 <div class="kv"><span>Order Status</span><b>{{ strtoupper($order->status) }}</b></div>
             </div>
 
-            <div class="box">
+            <div class="box" data-reveal>
                 <div style="font-weight:900;margin-bottom:6px;">Totals</div>
                 <div class="kv"><span>Subtotal</span><b>{{ number_format((float)$order->subtotal, 2) }}</b></div>
                 <div class="kv"><span>Discount Total</span><b>{{ number_format((float)$order->discount_total, 2) }}</b></div>
@@ -375,7 +383,7 @@
 
         <div style="height:12px;"></div>
 
-        <div class="tw">
+        <div class="tw" data-reveal>
             <table>
                 <thead>
                     <tr>
@@ -409,7 +417,7 @@
 
         <div style="height:12px;"></div>
 
-        <div class="box">
+        <div class="box" data-reveal>
             <div style="font-weight:900;margin-bottom:6px;">Payments</div>
             @if($order->payments->count() === 0)
                 <div class="muted">No payments recorded.</div>
@@ -442,11 +450,17 @@
                 </div>
             @endif
         </div>
+
+        @if (\App\Models\Setting::get('invoice_footer_note'))
+            <div class="muted" style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border-color, oklch(0.9 0 0)); text-align:center;">
+                {{ \App\Models\Setting::get('invoice_footer_note') }}
+            </div>
+        @endif
     </div>
 
     <div class="btns no-print">
         <a class="btnx btnx-ghost" href="{{ route('cart.index') }}">New Sale</a>
-        <button class="btnx" onclick="window.print()">Print Invoice</button>
+        <a class="btnx" href="{{ route('invoice.print', $order) }}" target="_blank">Print Invoice</a>
     </div>
 </div>
 

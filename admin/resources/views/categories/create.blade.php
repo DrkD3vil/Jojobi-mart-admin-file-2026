@@ -12,7 +12,7 @@
             @csrf
 
             {{-- Form Card --}}
-            <div class="form-card glass-effect animate-pop-in">
+            <div class="form-card glass-effect animate-pop-in" data-reveal>
                 {{-- Barcode Section --}}
                 <div class="form-section">
                     <div class="form-label-group">
@@ -126,7 +126,7 @@
             </div>
 
             {{-- Action Buttons --}}
-            <div class="form-actions animate-fade-in-delay">
+            <div class="form-actions animate-fade-in-delay" data-reveal>
                 <button type="submit" class="btn-primary submit-btn" id="submitBtn">
                     <span class="btn-spinner"></span>
                     <span class="btn-icon">
@@ -344,7 +344,7 @@
             color: var(--text-muted);
             background: var(--bg-tertiary);
             padding: 0.25rem 0.75rem;
-            border-radius: 12px;
+            border-radius: var(--radius);
         }
 
         /* Input Styles */
@@ -404,7 +404,7 @@
             background: none;
             border: none;
             padding: 0.5rem;
-            border-radius: 6px;
+            border-radius: calc(var(--radius) - 2px);
             cursor: pointer;
             color: var(--text-secondary);
             transition: all var(--transition-fast);

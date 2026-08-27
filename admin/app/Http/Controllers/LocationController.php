@@ -118,13 +118,32 @@ class LocationController extends Controller
 
     public function destroy(Location $location)
     {
-        $location->delete();
+        // locations has no soft-delete column, and several tables reference
+        // location_id with a plain constrained() FK (returns, exchanges,
+        // stock_transactions, batch_stocks, ...) that default to RESTRICT --
+        // deleting a location already used anywhere throws an unhandled
+        // QueryException (500) instead of a usable error message.
+        try {
+            $location->delete();
+        } catch (\Illuminate\Database\QueryException $e) {
+            return redirect()->route('locations.index')
+                ->with('error', 'Cannot delete this location: it is still referenced by existing orders, returns, exchanges, or stock records.');
+        }
+
         return redirect()->route('locations.index')->with('success', 'Location deleted successfully.');
     }
 
     public function ajaxDestroy(Location $location)
     {
-        $location->delete();
+        try {
+            $location->delete();
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Cannot delete this location: it is still referenced by existing orders, returns, exchanges, or stock records.',
+            ], 422);
+        }
+
         return response()->json(['ok' => true]);
     }
 

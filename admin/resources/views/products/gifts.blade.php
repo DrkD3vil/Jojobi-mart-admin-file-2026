@@ -25,8 +25,8 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-card rounded-xl p-5 shadow-card border border-border">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" data-reveal-group>
+        <div class="bg-card rounded-xl p-5 shadow-card border border-border" data-reveal>
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-muted-foreground">Total Offers</p>
@@ -38,7 +38,7 @@
             </div>
         </div>
 
-        <div class="bg-card rounded-xl p-5 shadow-card border border-border">
+        <div class="bg-card rounded-xl p-5 shadow-card border border-border" data-reveal>
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-muted-foreground">Active Locations</p>
@@ -50,7 +50,7 @@
             </div>
         </div>
 
-        <div class="bg-card rounded-xl p-5 shadow-card border border-border">
+        <div class="bg-card rounded-xl p-5 shadow-card border border-border" data-reveal>
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-muted-foreground">Total Free Qty</p>
@@ -62,7 +62,7 @@
             </div>
         </div>
 
-        <div class="bg-card rounded-xl p-5 shadow-card border border-border">
+        <div class="bg-card rounded-xl p-5 shadow-card border border-border" data-reveal>
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-muted-foreground">Avg Free Per Offer</p>
@@ -76,7 +76,7 @@
     </div>
 
     <!-- Filters Section -->
-    <div class="bg-card rounded-xl p-4 mb-6 shadow-card border border-border">
+    <div class="bg-card rounded-xl p-4 mb-6 shadow-card border border-border" data-reveal>
         <form method="GET" action="{{ route('products.gift-audit') }}" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- Search Input -->
@@ -155,7 +155,7 @@
     </div>
 
     <!-- Table Section -->
-    <div class="bg-card rounded-xl shadow-card border border-border overflow-hidden">
+    <div class="bg-card rounded-xl shadow-card border border-border overflow-hidden" data-reveal>
         @if(count($productGiftDetails) > 0)
         <div class="overflow-x-auto">
             <table class="w-full">
@@ -240,7 +240,7 @@
                                            data-batch-id="{{ $detail['batch_id'] }}"
                                            {{ $detail['is_active'] ? 'checked' : '' }}
                                            onchange="toggleOfferStatus(this)">
-                                    <label for="toggle-{{ $detail['batch_id'] }}" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                                    <label for="toggle-{{ $detail['batch_id'] }}" class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer" style="background: var(--border);"></label>
                                 </div>
                                 <span class="text-sm {{ $detail['is_active'] ? 'text-green-500' : 'text-red-500' }}">
                                     {{ $detail['is_active'] ? 'Active' : 'Inactive' }}
@@ -428,7 +428,7 @@
     @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
     .container {
-        animation: fadeIn 0.3s ease-out;
+        animation: fadeIn var(--transition-normal) ease-out;
     }
 
     @keyframes fadeIn {
@@ -453,7 +453,7 @@
     }
 
     .toggle-checkbox {
-        transition: all 0.3s;
+        transition: all var(--transition-normal);
         transform: translateX(0);
     }
 
@@ -462,7 +462,7 @@
     }
 
     .toggle-label {
-        transition: background-color 0.3s;
+        transition: background-color var(--transition-normal);
     }
 
     /* Table Styles */

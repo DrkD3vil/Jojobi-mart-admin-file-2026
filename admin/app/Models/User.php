@@ -63,29 +63,20 @@ class User extends Authenticatable
 
     public function hasPrivilege(string $slug): bool
     {
-        // Admin override (if role slug "admin" exists)
-        if ($this->roles()->whereIn('slug', ['admin', 'super-admin'])->exists()) {
+        // Admin override using cached roles to avoid DB queries
+        if ($this->hasRole('admin') || $this->hasRole('super-admin')) {
             return true;
         }
 
-        // If your Tyro Role model has privileges relationship
-        return $this->roles()
-            ->whereHas('privileges', fn($q) => $q->where('slug', $slug))
-            ->exists();
+        // Delegate to Tyro trait's cached privilege check
+        $userPrivileges = $this->tyroPrivilegeSlugs();
+        return in_array($slug, $userPrivileges, true) || in_array('*', $userPrivileges, true);
     }
-
-
-    // Add method to check for admin role (assuming you're using roles)
-    public function hasRole($role)
-    {
-        return $this->roles()->where('slug', $role)->exists();
-    }
-
 
     // If you're using permissions
     public function canAssignAccessKey()
     {
-        return $this->hasRole('admin');
+        return $this->hasRole('admin') || $this->hasRole('super-admin');
     }
 
     public function privilegeAccessKeys()

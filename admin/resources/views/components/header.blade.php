@@ -22,7 +22,13 @@
             'title' => 'Financial Analysis',
             'action_text' => 'Export',
             'action_icon' => 'download',
-            'action_href' => route('dashboard.financial.export'), // NOTE: this is POST in your routes (see below)
+            'action_href' => route('dashboard.financial.export', ['format' => 'csv']),
+        ],
+        'dashboard.reports*' => [
+            'title' => 'Reports & Analytics',
+            'action_text' => 'Export',
+            'action_icon' => 'download',
+            'action_href' => route('dashboard.reports.export', ['format' => 'csv', 'type' => 'products']),
         ],
 
         // Products
@@ -107,6 +113,52 @@
             'action_text' => null,
             'action_icon' => null,
             'action_href' => null,
+        ],
+
+        // RBAC: roles, privileges, user roles, access keys
+        'roles.*' => [
+            'title' => 'Roles',
+            'action_text' => null,
+            'action_icon' => null,
+            'action_href' => null,
+        ],
+        'privileges.*' => [
+            'title' => 'Privileges',
+            'action_text' => null,
+            'action_icon' => null,
+            'action_href' => null,
+        ],
+        'user.roles.*' => [
+            'title' => 'User Roles',
+            'action_text' => null,
+            'action_icon' => null,
+            'action_href' => null,
+        ],
+        'access_keys.index' => [
+            'title' => 'Access Key Management',
+            'action_text' => null,
+            'action_icon' => null,
+            'action_href' => null,
+        ],
+        'rbac.audit_log' => [
+            'title' => 'Audit Log',
+            'action_text' => 'Access Keys',
+            'action_icon' => 'arrow-left',
+            'action_href' => route('access_keys.index'),
+        ],
+
+        // Profile / account
+        'profile.edit' => [
+            'title' => 'Profile Settings',
+            'action_text' => null,
+            'action_icon' => null,
+            'action_href' => null,
+        ],
+        'password.change.form' => [
+            'title' => 'Change Password',
+            'action_text' => 'Back to Profile',
+            'action_icon' => 'arrow-left',
+            'action_href' => route('profile.edit'),
         ],
 
         // Expenses
@@ -217,12 +269,12 @@
             <i data-lucide="menu" class="w-6 h-6"></i>
         </button>
 
-        <div class="text-xl font-bold bg-gradient-to-r from-[var(--chart-1)] to-[var(--chart-4)] bg-clip-text text-transparent lg:hidden">
-            ShopSphere
+        <div class="text-xl lg:hidden" style="font-family: var(--font-display); font-weight: 600; color: var(--foreground);">
+            JOJOBI MART
         </div>
 
         <!-- ✅ Dynamic title -->
-        <h1 class="text-xl font-semibold hidden lg:block">
+        <h1 class="text-xl hidden lg:block">
             {{ $header['title'] }}
         </h1>
     </div>
@@ -234,25 +286,46 @@
                style="color: var(--muted-foreground);"></i>
 
             <input type="text" placeholder="Search products, orders..."
-                   class="rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent border transition-all duration-200 w-64"
+                   class="rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent border transition-all duration-200 w-40 lg:w-64"
                    style="background-color: var(--input); border-color: var(--border); color: var(--foreground);">
         </div>
 
-        <button class="relative p-2 rounded-full hover:bg-[var(--accent)] transition-colors duration-200">
-            <i data-lucide="bell" class="w-5 h-5" style="color: var(--muted-foreground);"></i>
-            <span class="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full" style="background-color: var(--danger);"></span>
+        <button id="mobile-search-trigger" class="icon-btn-anim relative p-2 rounded-full hover:bg-[var(--accent)] transition-colors duration-200 md:hidden">
+            <i data-lucide="search" class="w-5 h-5" style="color: var(--muted-foreground);"></i>
         </button>
 
-        <button id="theme-toggle" class="p-2 rounded-full hover:bg-[var(--accent)] transition-colors duration-200">
+        <button class="icon-btn-anim relative p-2 rounded-full hover:bg-[var(--accent)] transition-colors duration-200">
+            <i data-lucide="bell" class="w-5 h-5" style="color: var(--muted-foreground);"></i>
+            <span class="pulse-animation absolute top-1.5 right-1.5 block h-2 w-2 rounded-full" style="background-color: var(--danger);"></span>
+        </button>
+
+        <button id="theme-toggle" class="icon-btn-anim p-2 rounded-full hover:bg-[var(--accent)] transition-colors duration-200">
             <i data-lucide="sun" id="theme-icon" class="w-5 h-5" style="color: var(--muted-foreground);"></i>
         </button>
 
         <!-- ✅ Dynamic action button -->
         @if(!empty($header['action_href']) && !empty($header['action_text']))
-            <a href="{{ $header['action_href'] }}" class="btn-primary hidden md:flex">
-                <i data-lucide="{{ $header['action_icon'] ?? 'plus' }}" class="w-4 h-4"></i>
-                {{ $header['action_text'] }}
-            </a>
+            <span class="hidden md:inline-flex">
+                <a href="{{ $header['action_href'] }}" class="btn-primary">
+                    <i data-lucide="{{ $header['action_icon'] ?? 'plus' }}" class="w-4 h-4"></i>
+                    {{ $header['action_text'] }}
+                </a>
+            </span>
         @endif
     </div>
 </header>
+
+<!-- Mobile search overlay -->
+<div id="mobile-search-overlay">
+    <div class="mobile-search-box">
+        <div class="relative">
+            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style="color: var(--muted-foreground);"></i>
+            <input id="mobile-search-input" type="text" placeholder="Search products, orders..."
+                   class="w-full rounded-full py-3 pl-11 pr-11 text-sm border focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent transition-all duration-200"
+                   style="background-color: var(--input); border-color: var(--border); color: var(--foreground);">
+            <button id="mobile-search-close" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-[var(--accent)]">
+                <i data-lucide="x" class="w-4 h-4" style="color: var(--muted-foreground);"></i>
+            </button>
+        </div>
+    </div>
+</div>

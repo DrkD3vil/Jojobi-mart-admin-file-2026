@@ -4,14 +4,18 @@
     <meta charset="utf-8">
     <title>Create Return</title>
     <style>
-        body{font-family: Arial; margin:20px;}
-        input, select, textarea{padding:8px; width: 100%; margin: 5px 0;}
+        body{font-family: Arial; margin:20px; background: var(--background, #fff); color: var(--foreground, #222);}
+        input, select, textarea{padding:8px; width: 100%; margin: 5px 0; border: 1px solid var(--border, #ccc); border-radius: calc(var(--radius, 0.625rem) - 2px); background: var(--input, #fff); color: var(--foreground, #222); transition: border-color var(--transition-fast, 150ms) ease;}
         .row{display:flex; gap:10px;}
         .col{flex:1;}
-        .box{border:1px solid #ddd; padding:12px; margin:12px 0;}
-        button{padding:10px 14px;}
-        .ok{background:#dff0d8; padding:10px; margin-bottom:10px;}
-        .err{background:#f2dede; padding:10px; margin-bottom:10px;}
+        .box{border:1px solid var(--border, #ddd); border-radius: var(--radius, 0.625rem); background: var(--card, #fff); padding:12px; margin:12px 0; box-shadow: var(--card-shadow, none);}
+        button{padding:10px 14px; border-radius: calc(var(--radius, 0.625rem) - 2px); border: 1px solid transparent; background: var(--sidebar-primary, #f0ad4e); color: var(--sidebar-primary-foreground, #fff); cursor: pointer; transition: all var(--transition-fast, 150ms) ease;}
+        .ok{background: color-mix(in oklch, var(--success, #3c9d5c) 15%, white); border: 1px solid color-mix(in oklch, var(--success, #3c9d5c) 35%, var(--border, #ddd)); color: var(--success, #2f6f3e); border-radius: var(--radius, 0.625rem); padding:10px; margin-bottom:10px;}
+        .err{background: color-mix(in oklch, var(--danger, #d9534f) 15%, white); border: 1px solid color-mix(in oklch, var(--danger, #d9534f) 35%, var(--border, #ddd)); color: var(--danger, #a94442); border-radius: var(--radius, 0.625rem); padding:10px; margin-bottom:10px;}
+
+        @media (max-width: 768px) {
+            .row{flex-direction: column;}
+        }
     </style>
 </head>
 <body>
@@ -28,7 +32,7 @@
 </div>
 @endif
 
-<form method="POST" action="/returns">
+<form method="POST" action="/returns" data-reveal>
     @csrf
 
     <div class="row">
@@ -65,9 +69,9 @@
     <label>Note</label>
     <textarea name="note" rows="2"></textarea>
 
-    <div class="box">
+    <div class="box" data-reveal>
         <h3>Return Item #1 (demo)</h3>
-        <p style="color:#555;">For demo you manually input product/batch/order_item. In POS you will pick from order items.</p>
+        <p style="color: var(--muted-foreground, #555);">For demo you manually input product/batch/order_item. In POS you will pick from order items.</p>
 
         <div class="row">
             <div class="col">

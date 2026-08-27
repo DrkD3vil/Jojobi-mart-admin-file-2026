@@ -21,7 +21,7 @@
             </div>
 
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8" data-reveal>
                 <div class="glass-card p-5 rounded-xl border border-[var(--border-color)]/30">
                     <div class="flex items-center justify-between">
                         <div>
@@ -66,7 +66,7 @@
             </div>
 
             <!-- Search and Filters -->
-            <div class="glass-card p-5 rounded-xl border border-[var(--border-color)]/30 mb-6">
+            <div class="glass-card p-5 rounded-xl border border-[var(--border-color)]/30 mb-6" data-reveal>
                 <form method="GET" action="{{ route('roles.index') }}" class="space-y-4">
                     <div class="flex flex-col md:flex-row gap-4">
                         <div class="flex-1">
@@ -99,7 +99,7 @@
         </div>
 
         <!-- Roles Table -->
-        <div class="glass-card rounded-xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] hover:shadow-[var(--card-shadow-hover)] transition-all duration-500">
+        <div class="glass-card rounded-xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] hover:shadow-[var(--card-shadow-hover)] transition-all duration-500" data-reveal>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
@@ -227,7 +227,7 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6" data-reveal>
             <div class="glass-card p-5 rounded-xl border border-[var(--border-color)]/30">
                 <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">Quick Tips</h3>
                 <ul class="space-y-3">
@@ -274,7 +274,7 @@
         background: var(--glass-base);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--border-color);
     }
 
     .btn-primary {
@@ -310,7 +310,7 @@
 
     /* Table row animation */
     tr {
-        animation: fadeIn 0.5s ease-out;
+        animation: fadeIn var(--transition-slow) ease-out;
     }
 
     @keyframes fadeIn {

@@ -299,13 +299,13 @@
     .alert-success {
         background: var(--success);
         color: white;
-        border-left: 4px solid oklch(0.5 0.2 150);
+        border-left: 4px solid var(--success);
     }
 
     .alert-danger {
         background: var(--danger);
         color: white;
-        border-left: 4px solid oklch(0.5 0.25 25);
+        border-left: 4px solid var(--danger);
     }
 
     @keyframes slideDown {
@@ -321,8 +321,8 @@
 
     /* Empty State */
     .empty-state {
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
+        background: var(--card);
+        border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: 4rem 2rem;
         text-align: center;
@@ -368,7 +368,7 @@
 
     .modal-container {
         position: relative;
-        background: var(--bg-secondary);
+        background: var(--card);
         border-radius: var(--radius);
         width: 90%;
         max-width: 500px;
@@ -395,7 +395,7 @@
 
     .modal-header {
         padding: 1rem 1.5rem;
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -406,12 +406,12 @@
         border: none;
         font-size: 1.5rem;
         cursor: pointer;
-        color: var(--text-secondary);
+        color: var(--muted-foreground);
         transition: color var(--transition-fast);
     }
 
     .modal-close:hover {
-        color: var(--text-primary);
+        color: var(--foreground);
     }
 
     .modal-body {
@@ -420,7 +420,7 @@
 
     .modal-footer {
         padding: 1rem 1.5rem;
-        border-top: 1px solid var(--border-color);
+        border-top: 1px solid var(--border);
         display: flex;
         align-items: center;
         justify-content: flex-end;
@@ -432,8 +432,8 @@
         position: fixed;
         bottom: 1.5rem;
         right: 1.5rem;
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
+        background: var(--card);
+        border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: 1rem 1.5rem;
         box-shadow: var(--dropdown-shadow);
@@ -472,21 +472,21 @@
 
     .tooltip .tooltip-text {
         visibility: hidden;
-        background-color: var(--bg-primary);
-        color: var(--text-primary);
+        background-color: var(--popover);
+        color: var(--foreground);
         text-align: center;
         padding: 4px 8px;
-        border-radius: 4px;
+        border-radius: calc(var(--radius) - 2px);
         position: absolute;
         z-index: 1;
         bottom: 125%;
         left: 50%;
         margin-left: -60px;
         opacity: 0;
-        transition: opacity 0.3s;
+        transition: opacity var(--transition-normal);
         font-size: 12px;
         white-space: nowrap;
-        border: 1px solid var(--border-color);
+        border: 1px solid var(--border);
     }
 
     .tooltip:hover .tooltip-text {

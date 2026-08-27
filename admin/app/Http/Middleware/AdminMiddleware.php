@@ -24,11 +24,12 @@ class AdminMiddleware
             return redirect()->route('tyro-login.login');
         }
 
-        // Check if the user has the admin role (make sure 'admin' exists in the role table)
-        if (auth()->user()->hasRole('admin')) {
-            Log::info('User is an admin', ['user_id' => auth()->id()]);
+        // Check if the user has the admin or super-admin role
+        if (auth()->user()->hasRole('admin') || auth()->user()->hasRole('super-admin')) {
+            Log::info('User is authorized via admin middleware', ['user_id' => auth()->id()]);
             return $next($request);
         }
+        
 
         // If not admin, deny access and log the attempt
         Log::warning('User without admin role attempted to access admin route', ['user_id' => auth()->id(), 'request_url' => $request->url()]);

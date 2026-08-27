@@ -14,7 +14,7 @@
 .loc-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
 .loc-btn{border:1px solid var(--border-color);padding:10px 12px;border-radius:calc(var(--radius) - 2px);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all var(--transition-fast);background:transparent;color:var(--foreground);}
 .loc-btn:hover{background:var(--bg-tertiary);border-color:var(--accent-color);}
-.loc-btn-primary{background:var(--accent-color);border-color:transparent;color:#fff;}
+.loc-btn-primary{background:var(--accent-color);border-color:transparent;color:var(--sidebar-primary-foreground);}
 .loc-btn-primary:hover{background:var(--accent-hover);box-shadow:0 8px 18px -10px var(--accent-glow);}
 .loc-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border-color);background:var(--bg-tertiary);padding:8px 10px;border-radius:999px;font-size:.85rem;}
 .loc-card{background:var(--card);border:1px solid var(--border-color);border-radius:var(--radius);padding:14px;box-shadow:var(--card-shadow);margin-bottom:14px;}
@@ -45,7 +45,7 @@
 .loc-switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:999px;background:var(--foreground);transition:all var(--transition-fast);opacity:.9;}
 .loc-switch.on{background:color-mix(in oklch, var(--success) 25%, var(--bg-tertiary) 75%);border-color:color-mix(in oklch, var(--success) 45%, var(--border-color) 55%);}
 .loc-switch.on::after{left:23px;}
-.loc-iconBtn{border:1px solid var(--border-color);background:transparent;color:var(--foreground);border-radius:10px;padding:8px 10px;cursor:pointer;}
+.loc-iconBtn{border:1px solid var(--border-color);background:transparent;color:var(--foreground);border-radius:var(--radius);padding:8px 10px;cursor:pointer;}
 .loc-iconBtn:hover{background:var(--bg-tertiary);border-color:var(--accent-color);}
 .loc-skel{height:14px;border-radius:999px;background:color-mix(in oklch, var(--bg-tertiary) 65%, var(--card) 35%);}
 </style>
@@ -55,7 +55,7 @@
 @endphp
 
 <div class="loc-wrap">
-  <div class="loc-top">
+  <div class="loc-top" data-reveal>
     <div>
       <div class="loc-title"><i class="fas fa-map-location-dot"></i> Locations</div>
       <div class="loc-sub">AJAX search + filters + toggle status + delete without reload.</div>
@@ -73,7 +73,7 @@
     </div>
   @endif
 
-  <div class="loc-card">
+  <div class="loc-card" data-reveal>
     <div class="loc-grid">
       <div class="loc-field">
         <label><i class="fas fa-magnifying-glass"></i> Search</label>

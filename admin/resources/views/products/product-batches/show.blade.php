@@ -542,16 +542,16 @@
                         <table class="batch-table">
                             <tr>
                                 <th>Buy Price</th>
-                                <td><span class="price-tag">${{ number_format($batch->buy_price, 2) }}</span></td>
+                                <td><span class="price-tag">৳{{ number_format($batch->buy_price, 2) }}</span></td>
                             </tr>
                             <tr>
                                 <th>Sell Price</th>
                                 <td>
                                     <div class="price-comparison">
-                                        <span class="price-tag">${{ number_format($batch->original_sell_price, 2) }}</span>
+                                        <span class="price-tag">৳{{ number_format($batch->original_sell_price, 2) }}</span>
                                         @if ($batch->discounted_price)
                                             <span
-                                                class="original-price">${{ number_format($batch->original_sell_price, 2) }}</span>
+                                                class="original-price">৳{{ number_format($batch->original_sell_price, 2) }}</span>
                                         @endif
                                     </div>
                                 </td>
@@ -564,7 +564,7 @@
                                         <div class="price-comparison">
                                             <span class="price-tag"
                                                 style="background: linear-gradient(135deg, var(--warning) 15%, var(--chart-3) 100%);">
-                                                ${{ number_format($batch->discounted_price, 2) }}
+                                                ৳{{ number_format($batch->discounted_price, 2) }}
                                             </span>
                                             @if ($batch->discount_percentage)
                                                 <span
@@ -582,7 +582,7 @@
                                     <td>
                                         <span class="price-tag"
                                             style="background: linear-gradient(135deg, var(--info) 15%, var(--chart-1) 100%);">
-                                            ${{ number_format($batch->whole_sell_price, 2) }}
+                                            ৳{{ number_format($batch->whole_sell_price, 2) }}
                                         </span>
                                         <small class="text-muted d-block mt-1">
                                             (Min: {{ $batch->whole_sell_min_qty ?? 'Any' }} | Max:
@@ -598,7 +598,7 @@
                                     <td>
                                         <span class="price-tag"
                                             style="background: linear-gradient(135deg, var(--accent-color) 15%, var(--chart-4) 100%);">
-                                            ${{ number_format($batch->customer_whole_price, 2) }}
+                                            ৳{{ number_format($batch->customer_whole_price, 2) }}
                                         </span>
                                         <small class="text-muted d-block mt-1">
                                             (Min: {{ $batch->customer_whole_min_qty ?? 'Any' }} | Max:

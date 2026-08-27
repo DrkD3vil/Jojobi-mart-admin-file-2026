@@ -137,7 +137,7 @@
 
         .badge.new {
             background: var(--success);
-            color: white;
+            color: var(--success-foreground);
         }
 
         .badge.pending {
@@ -201,7 +201,7 @@
 
         .metric-trend.positive {
             background: var(--success);
-            color: white;
+            color: var(--success-foreground);
         }
 
         .metric-trend.negative {
@@ -437,7 +437,7 @@
 
         .insight-icon.success {
             background: var(--success);
-            color: white;
+            color: var(--success-foreground);
         }
 
         .insight-icon.warning {
@@ -511,62 +511,6 @@
             font-size: 14px;
         }
 
-        /* Theme Toggle */
-        .theme-toggle {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: var(--muted);
-            transition: .4s;
-            border-radius: 24px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked+.slider {
-            background-color: var(--primary);
-        }
-
-        input:checked+.slider:before {
-            transform: translateX(26px);
-        }
-
-        .theme-label {
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
     </style>
 
 
@@ -591,12 +535,6 @@
         <div class="header-actions">
             <button class="btn btn-secondary" id="refreshBtn">Refresh</button>
             <button class="btn btn-primary" id="exportBtn">Export Report</button>
-            <div class="theme-toggle">
-                <label class="switch">
-                    <input type="checkbox" id="themeToggle">
-                    <span class="slider"></span>
-                </label>
-            </div>
         </div>
     </div>
 
@@ -840,7 +778,7 @@
                             <th>Order #</th>
                             <th>Customer</th>
                             <th>Date</th>
-                            <th>Amount</th>
+                            <th class="numeric">Amount</th>
                             <th>Status</th>
                             <th>Payment</th>
                         </tr>
@@ -865,7 +803,7 @@
                             <th>Title</th>
                             <th>Category</th>
                             <th>Method</th>
-                            <th>Amount</th>
+                            <th class="numeric">Amount</th>
                         </tr>
                     </thead>
                     <tbody id="recentExpensesBody"></tbody>
@@ -1047,15 +985,15 @@
     ------------------------- */
     function palette() {
         return {
-            blue:   'rgba(59,130,246,1)',
-            sky:    'rgba(14,165,233,1)',
-            violet: 'rgba(139,92,246,1)',
-            green:  'rgba(34,197,94,1)',
-            amber:  'rgba(245,158,11,1)',
-            rose:   'rgba(244,63,94,1)',
-            slate:  'rgba(100,116,139,1)',
-            grid:   'rgba(148,163,184,.25)',
-            tick:   'rgba(148,163,184,.9)',
+            blue:   'rgba(76,141,255,1)',
+            sky:    'rgba(147,164,176,1)',
+            violet: 'rgba(76,141,255,1)',
+            green:  'rgba(47,217,192,1)',
+            amber:  'rgba(255,176,32,1)',
+            rose:   'rgba(255,93,93,1)',
+            slate:  'rgba(166,124,82,1)',
+            grid:   'rgba(147,164,176,.25)',
+            tick:   'rgba(147,164,176,.9)',
         };
     }
 
@@ -1123,7 +1061,7 @@
 
         // Sales: revenue + orders (2 axis)
         const sctx = $('salesChart').getContext('2d');
-        const revFill = gradientFill(sctx, 'rgba(59,130,246,.40)', 'rgba(59,130,246,0)');
+        const revFill = gradientFill(sctx, 'rgba(255,176,32,.40)', 'rgba(255,176,32,0)');
         salesChart = new Chart(sctx, {
             type: 'line',
             data: { labels: [], datasets: [
@@ -1219,12 +1157,12 @@
                 data:[],
                 borderRadius:10,
                 backgroundColor:[
-                    'rgba(59,130,246,.85)',
-                    'rgba(34,197,94,.85)',
-                    'rgba(245,158,11,.85)',
-                    'rgba(139,92,246,.85)',
-                    'rgba(244,63,94,.85)',
-                    'rgba(14,165,233,.85)'
+                    'rgba(255,176,32,.85)',
+                    'rgba(47,217,192,.85)',
+                    'rgba(199,146,234,.85)',
+                    'rgba(76,141,255,.85)',
+                    'rgba(255,93,93,.85)',
+                    'rgba(147,164,176,.85)'
                 ]
             }] },
             options: {
@@ -1248,14 +1186,14 @@
                 label:'Expenses',
                 data:[],
                 borderRadius:10,
-                backgroundColor: gradientFill(ectx, 'rgba(245,158,11,.70)', 'rgba(245,158,11,.20)')
+                backgroundColor: gradientFill(ectx, 'rgba(199,146,234,.70)', 'rgba(199,146,234,.20)')
             }] },
             options: baseOptions({ moneyAxis: true })
         });
 
         // Daily profit: line (money)
         const prctx = $('profitChart').getContext('2d');
-        const profitFill = gradientFill(prctx, 'rgba(34,197,94,.32)', 'rgba(34,197,94,0)');
+        const profitFill = gradientFill(prctx, 'rgba(47,217,192,.32)', 'rgba(47,217,192,0)');
         profitChart = new Chart(prctx, {
             type: 'line',
             data: { labels: [], datasets: [{
@@ -1278,9 +1216,9 @@
         componentsChart = new Chart(cctx, {
             type: 'bar',
             data: { labels: [], datasets: [
-                { label:'Net Sales', data:[], borderRadius:10, backgroundColor:'rgba(14,165,233,.85)' },
-                { label:'COGS',      data:[], borderRadius:10, backgroundColor:'rgba(244,63,94,.80)' },
-                { label:'Expenses',  data:[], borderRadius:10, backgroundColor:'rgba(245,158,11,.80)' }
+                { label:'Net Sales', data:[], borderRadius:10, backgroundColor:'rgba(147,164,176,.85)' },
+                { label:'COGS',      data:[], borderRadius:10, backgroundColor:'rgba(255,93,93,.80)' },
+                { label:'Expenses',  data:[], borderRadius:10, backgroundColor:'rgba(199,146,234,.80)' }
             ]},
             options: baseOptions({ moneyAxis: true })
         });
@@ -1401,8 +1339,8 @@
             paymentMethodsChart.data.datasets[0].data = pm.map(x => Number(x.total || 0));
 
             const colors = [
-                'rgba(59,130,246,.90)','rgba(34,197,94,.90)','rgba(245,158,11,.90)',
-                'rgba(139,92,246,.90)','rgba(244,63,94,.90)','rgba(14,165,233,.90)','rgba(100,116,139,.90)'
+                'rgba(255,176,32,.90)','rgba(47,217,192,.90)','rgba(199,146,234,.90)',
+                'rgba(76,141,255,.90)','rgba(255,93,93,.90)','rgba(147,164,176,.90)','rgba(166,124,82,.90)'
             ];
             paymentMethodsChart.data.datasets[0].backgroundColor = pm.map((_, i) => colors[i % colors.length]);
             paymentMethodsChart.update('none');
@@ -1628,33 +1566,21 @@
     /* -------------------------
        Export
     ------------------------- */
-    async function exportReport() {
-        showLoading();
-        try {
-            const body = {
-                date_range: $('dateRange').value,
-                start_date: $('startDate').value,
-                end_date: $('endDate').value,
-                status: $('statusFilter').value,
-                payment_status: $('paymentStatus').value,
-                location_id: $('locationFilter').value || null,
-            };
+    function exportReport() {
+        const format = (prompt('Export format: csv, xlsx, or pdf', 'csv') || '').trim().toLowerCase();
+        if (!['csv', 'xlsx', 'pdf'].includes(format)) return;
 
-            const res = await fetch(URL_EXPORT, {
-                method: 'POST',
-                headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept':'application/json' },
-                credentials:'same-origin',
-                body: JSON.stringify(body)
-            });
+        const params = new URLSearchParams({
+            date_range: $('dateRange').value,
+            start_date: $('startDate').value || '',
+            end_date: $('endDate').value || '',
+            status: $('statusFilter').value,
+            payment_status: $('paymentStatus').value,
+            location_id: $('locationFilter').value || '',
+            format,
+        });
 
-            const data = await res.json();
-            alert(data.message || 'Export queued.');
-        } catch (e) {
-            console.error(e);
-            alert('Export failed');
-        } finally {
-            hideLoading();
-        }
+        window.open(URL_EXPORT + '?' + params.toString(), '_blank');
     }
 
     /* -------------------------

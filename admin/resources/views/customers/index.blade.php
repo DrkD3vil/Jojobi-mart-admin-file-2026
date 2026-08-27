@@ -1,1003 +1,1230 @@
-{{-- resources/views/customers/index.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-3">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
-        /* ✅ Your palette (kept same names) */
         :root {
-            --radius: 0.625rem;
-
-            --transition-fast: 150ms;
-            --transition-normal: 250ms;
-            --transition-slow: 350ms;
-
-            --background: oklch(0.145 0 0);
-            --foreground: oklch(0.985 0 0);
-            --card: oklch(0.205 0 0);
-            --card-foreground: oklch(0.985 0 0);
-            --popover: oklch(0.205 0 0);
-            --popover-foreground: oklch(0.985 0 0);
-            --primary: oklch(0.922 0 0);
-            --primary-foreground: oklch(0.205 0 0);
-            --secondary: oklch(0.269 0 0);
-            --secondary-foreground: oklch(0.985 0 0);
-            --muted: oklch(0.269 0 0);
-            --muted-foreground: oklch(0.708 0 0);
-            --accent: oklch(0.269 0 0);
-            --accent-foreground: oklch(0.985 0 0);
-            --destructive: oklch(0.704 0.191 22.216);
-            --border: oklch(1 0 0 / 15%);
-            --input: oklch(1 0 0 / 15%);
-            --ring: oklch(0.556 0 0);
-
-            --sidebar: oklch(0.18 0 0);
-            --sidebar-foreground: oklch(0.985 0 0);
-            --sidebar-primary: oklch(0.488 0.243 264.376);
-            --sidebar-primary-foreground: oklch(0.985 0 0);
-            --sidebar-accent: oklch(0.24 0 0);
-            --sidebar-accent-foreground: oklch(0.985 0 0);
-            --sidebar-border: oklch(1 0 0 / 15%);
-            --sidebar-ring: oklch(0.556 0 0);
-
-            --success: oklch(0.696 0.17 162.48);
-            --warning: oklch(0.769 0.188 70.08);
-            --info: oklch(0.488 0.243 264.376);
-            --danger: oklch(0.704 0.191 22.216);
-
-            --card-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.25);
-            --card-shadow-hover: 0 6px 12px -1px rgb(0 0 0 / 0.35), 0 3px 6px -2px rgb(0 0 0 / 0.25);
-            --dropdown-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.3);
-
-            --accent-color: var(--sidebar-primary);
-            --accent-hover: oklch(0.488 0.243 264.376 / 0.8);
-            --accent-glow: oklch(0.488 0.243 264.376 / 0.2);
-
-            --bg-primary: var(--background);
-            --bg-secondary: var(--card);
-            --bg-tertiary: var(--secondary);
-            --text-primary: var(--foreground);
-            --text-secondary: var(--muted-foreground);
-            --text-muted: oklch(0.708 0 0 / 0.7);
-            --border-color: var(--border);
-            --glass-base: oklch(0.205 0 0 / 0.7);
+            --customer-gradient: linear-gradient(135deg, var(--sidebar-primary) 0%, color-mix(in oklch, var(--sidebar-primary) 80%, black) 100%);
+            --customer-success: var(--success);
+            --customer-danger: var(--danger);
+            --customer-warning: var(--warning);
+            --customer-info: var(--info);
+            --customer-bg-light: var(--muted);
+            --customer-shadow: var(--card-shadow);
+            --customer-shadow-hover: var(--card-shadow-hover);
         }
 
-        html[data-theme='light'] {
-            --background: oklch(0.99 0 0);
-            --foreground: oklch(0.12 0 0);
-            --card: oklch(1 0 0);
-            --card-foreground: oklch(0.12 0 0);
-            --popover: oklch(1 0 0);
-            --popover-foreground: oklch(0.12 0 0);
-            --primary: oklch(0.15 0 0);
-            --primary-foreground: oklch(0.99 0 0);
-            --secondary: oklch(0.97 0 0);
-            --secondary-foreground: oklch(0.15 0 0);
-            --muted: oklch(0.96 0 0);
-            --muted-foreground: oklch(0.5 0 0);
-            --accent: oklch(0.96 0 0);
-            --accent-foreground: oklch(0.15 0 0);
-            --destructive: oklch(0.577 0.245 27.325);
-            --border: oklch(0.9 0 0);
-            --input: oklch(0.96 0 0);
-            --ring: oklch(0.65 0 0);
-
-            --sidebar: oklch(1 0 0);
-            --sidebar-foreground: oklch(0.12 0 0);
-            --sidebar-primary: oklch(0.646 0.222 41.116);
-            --sidebar-primary-foreground: oklch(1 0 0);
-            --sidebar-accent: oklch(0.97 0 0);
-            --sidebar-accent-foreground: oklch(0.15 0 0);
-            --sidebar-border: oklch(0.88 0 0);
-            --sidebar-ring: oklch(0.65 0 0);
-
-            --success: oklch(0.627 0.194 149.214);
-            --warning: oklch(0.769 0.188 70.08);
-            --info: oklch(0.623 0.214 259.815);
-            --danger: oklch(0.577 0.245 27.325);
-
-            --card-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.08);
-            --card-shadow-hover: 0 6px 12px -1px rgb(0 0 0 / 0.12), 0 3px 6px -2px rgb(0 0 0 / 0.08);
-            --dropdown-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-
-            --accent-color: var(--sidebar-primary);
-            --accent-hover: oklch(0.646 0.222 41.116 / 0.8);
-            --accent-glow: oklch(0.646 0.222 41.116 / 0.1);
-
-            --bg-primary: var(--background);
-            --bg-secondary: var(--card);
-            --bg-tertiary: var(--secondary);
-            --text-primary: var(--foreground);
-            --text-secondary: var(--muted-foreground);
-            --text-muted: oklch(0.5 0 0 / 0.7);
-            --border-color: var(--border);
-            --glass-base: rgba(255, 255, 255, 0.85);
+        .customer-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
-        .page { color: var(--foreground); }
-
-        .shell {
-            display: grid;
-            grid-template-columns: 1.1fr 0.9fr;
-            gap: 14px;
-        }
-        @media (max-width: 992px) { .shell { grid-template-columns: 1fr; } }
-
-        .cardx {
+        /* Header */
+        .customer-header {
             background: var(--card);
-            color: var(--card-foreground);
+            border-radius: calc(var(--radius) + 4px);
+            padding: 24px 32px;
+            margin-bottom: 32px;
             border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--card-shadow);
-            overflow: hidden;
-            transition: box-shadow var(--transition-normal) ease, transform var(--transition-normal) ease;
-        }
-        .cardx:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-1px); }
-
-        .cardx-hd {
-            padding: 12px 14px;
-            border-bottom: 1px solid var(--border);
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap: 10px;
-        }
-        .title { font-size: 18px; font-weight: 900; margin: 0; }
-        .subtle { font-size: 12px; color: var(--muted-foreground); }
-        .strong { font-weight: 900; }
-
-        .inputx, .selectx, .textareax {
-            background: color-mix(in oklch, var(--card) 92%, black 8%);
-            border: 1px solid var(--border);
-            color: var(--foreground);
-            border-radius: calc(var(--radius) - 4px);
-            padding: 10px 12px;
-            outline: none;
-            width: 100%;
-            transition: border-color var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
-        }
-        .textareax { min-height: 90px; resize: vertical; }
-        .selectx { height: 42px; padding: 0 12px; }
-        .inputx:focus, .selectx:focus, .textareax:focus {
-            border-color: color-mix(in oklch, var(--accent-color) 55%, var(--border) 45%);
-            box-shadow: 0 0 0 4px var(--accent-glow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            box-shadow: var(--customer-shadow);
+            animation: slideDown 0.6s ease-out;
         }
 
-        .btnx {
-            border: 1px solid transparent;
-            background: var(--accent-color);
+        .customer-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .customer-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: calc(var(--radius) + 4px);
+            background: var(--customer-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
-            border-radius: calc(var(--radius) - 4px);
-            padding: 8px 12px;
-            font-weight: 850;
-            transition: transform var(--transition-fast) ease, background var(--transition-fast) ease;
-            white-space: nowrap;
+            font-size: 24px;
+            box-shadow: 0 4px 12px var(--accent-glow);
+            position: relative;
+            overflow: hidden;
         }
-        .btnx:hover { background: var(--accent-hover); transform: translateY(-1px); }
-        .btnx:active { transform: translateY(0px); }
 
-        .btnx-ghost {
-            background: transparent;
-            border: 1px solid var(--border);
+        .customer-icon::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: rotate(25deg);
+        }
+
+        .customer-title {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 800;
             color: var(--foreground);
-        }
-        .btnx-ghost:hover {
-            background: color-mix(in oklch, var(--secondary) 70%, transparent 30%);
+            letter-spacing: -0.02em;
         }
 
-        .btnx-danger {
-            background: color-mix(in oklch, var(--danger) 92%, black 8%);
-        }
-        .btnx-danger:hover {
-            background: color-mix(in oklch, var(--danger) 82%, black 18%);
+        .customer-title span {
+            background: var(--customer-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .pill {
-            font-size: 12px;
-            padding: 3px 10px;
-            border-radius: 999px;
-            border: 1px solid var(--border);
-            background: color-mix(in oklch, var(--secondary) 65%, transparent 35%);
-            color: var(--foreground);
-            font-weight: 850;
-            display:inline-flex;
-            gap: 6px;
-            align-items:center;
+        .customer-subtitle {
+            font-size: 14px;
+            color: var(--muted-foreground);
+            margin: 4px 0 0 0;
         }
-        .pill.ok { border-color: color-mix(in oklch, var(--success) 55%, var(--border) 45%); }
-        .pill.warn { border-color: color-mix(in oklch, var(--warning) 55%, var(--border) 45%); }
-        .pill.info { border-color: color-mix(in oklch, var(--info) 55%, var(--border) 45%); }
 
-        .result-list { max-height: 360px; overflow:auto; }
-        .result-row {
-            display:flex;
+        .customer-actions {
+            display: flex;
             gap: 12px;
-            align-items:center;
-            padding: 10px 12px;
-            border-bottom: 1px solid var(--border);
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .customer-btn {
+            padding: 10px 20px;
+            border-radius: calc(var(--radius) - 2px);
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
             cursor: pointer;
-            animation: fadeInUp 220ms ease both;
-            transition: background var(--transition-fast) ease, transform var(--transition-fast) ease;
+            transition: all var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
         }
-        .result-row:hover {
-            background: color-mix(in oklch, var(--accent-glow) 35%, transparent 65%);
-            transform: translateY(-1px);
+
+        .customer-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity var(--transition-normal);
         }
-        .result-row:last-child { border-bottom: 0; }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        .customer-btn:hover::after {
+            opacity: 1;
         }
-        .avatar {
-            width: 42px; height: 42px;
-            border-radius: 14px;
-            background: color-mix(in oklch, var(--secondary) 70%, transparent 30%);
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-weight: 950;
+
+        .customer-btn-primary {
+            background: var(--customer-gradient);
+            color: white;
+            box-shadow: 0 2px 8px var(--accent-glow);
+        }
+
+        .customer-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px var(--accent-glow);
+        }
+
+        .customer-btn-success {
+            background: linear-gradient(135deg, var(--success), color-mix(in oklch, var(--success) 80%, black));
+            color: white;
+            box-shadow: 0 2px 8px color-mix(in oklch, var(--success) 35%, transparent);
+        }
+
+        .customer-btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px color-mix(in oklch, var(--success) 45%, transparent);
+        }
+
+        .customer-btn-danger {
+            background: linear-gradient(135deg, var(--danger), color-mix(in oklch, var(--danger) 80%, black));
+            color: white;
+            box-shadow: 0 2px 8px color-mix(in oklch, var(--danger) 35%, transparent);
+        }
+
+        .customer-btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px color-mix(in oklch, var(--danger) 45%, transparent);
+        }
+
+        .customer-btn-ghost {
+            background: var(--muted);
             color: var(--foreground);
-            flex: 0 0 auto;
             border: 1px solid var(--border);
         }
-        .r-title { font-weight: 900; line-height: 1.15; }
-        .r-meta { font-size: 12px; color: var(--muted-foreground); line-height: 1.25; }
 
-        .tablex { width:100%; border-collapse:separate; border-spacing:0; }
-        .tablex th, .tablex td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
-        .tablex thead th {
-            position: sticky;
+        .customer-btn-ghost:hover {
+            background: var(--border);
+            transform: translateY(-2px);
+        }
+
+        /* Stats Grid */
+        .customer-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+            animation: fadeUp 0.6s ease-out 0.1s both;
+        }
+
+        .customer-stat-card {
+            background: var(--card);
+            border-radius: calc(var(--radius) + 4px);
+            padding: 16px 20px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--customer-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .customer-stat-card::before {
+            content: '';
+            position: absolute;
             top: 0;
-            background: color-mix(in oklch, var(--card) 88%, black 12%);
-            z-index: 1;
-            font-size: 12px;
-            letter-spacing: 0.25px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--customer-gradient);
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+
+        .customer-stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .customer-stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--customer-shadow-hover);
+        }
+
+        .customer-stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .customer-stat-icon.primary {
+            background: color-mix(in oklch, var(--sidebar-primary) 18%, var(--card));
+            color: var(--sidebar-primary);
+        }
+
+        .customer-stat-icon.success {
+            background: color-mix(in oklch, var(--success) 18%, var(--card));
+            color: var(--success);
+        }
+
+        .customer-stat-icon.danger {
+            background: color-mix(in oklch, var(--danger) 18%, var(--card));
+            color: var(--danger);
+        }
+
+        .customer-stat-icon.warning {
+            background: color-mix(in oklch, var(--warning) 18%, var(--card));
+            color: var(--warning);
+        }
+
+        .customer-stat-icon.info {
+            background: color-mix(in oklch, var(--info) 18%, var(--card));
+            color: var(--info);
+        }
+
+        .customer-stat-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .customer-stat-number {
+            font-size: 22px;
+            font-weight: 800;
+            display: block;
+            color: var(--foreground);
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .customer-stat-label {
+            font-size: 11px;
+            color: var(--muted-foreground);
             text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+        }
+
+        /* Search & Filter */
+        .customer-toolbar {
+            background: var(--card);
+            border-radius: calc(var(--radius) + 4px);
+            padding: 16px 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+            box-shadow: var(--customer-shadow);
+        }
+
+        .customer-search {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .customer-search input {
+            width: 100%;
+            padding: 10px 16px 10px 42px;
+            border-radius: calc(var(--radius) - 2px);
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--foreground);
+            font-size: 14px;
+            transition: all var(--transition-normal);
+        }
+
+        .customer-search input:focus {
+            outline: none;
+            border-color: var(--sidebar-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .customer-search .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
             color: var(--muted-foreground);
         }
 
-        .money { text-align:right; font-variant-numeric: tabular-nums; }
-        .muted { color: var(--muted-foreground); }
-
-        .row-flash { animation: flash 700ms ease; }
-        @keyframes flash {
-            0% { box-shadow: inset 0 0 0 9999px color-mix(in oklch, var(--accent-glow) 70%, transparent 30%); }
-            100% { box-shadow: inset 0 0 0 9999px transparent; }
-        }
-
-        .toast-mini {
-            position: fixed; right: 16px; bottom: 16px;
-            background: color-mix(in oklch, var(--card) 86%, black 14%);
+        .customer-filter-select {
+            padding: 10px 16px;
+            border-radius: calc(var(--radius) - 2px);
             border: 1px solid var(--border);
+            background: var(--bg);
             color: var(--foreground);
-            padding: 10px 12px; border-radius: 12px;
-            font-size: 13px; display:none;
-            box-shadow: var(--card-shadow-hover);
-            z-index: 9999;
-            max-width: min(360px, calc(100vw - 32px));
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 140px;
+            transition: all var(--transition-normal);
         }
 
-        .spin {
-            display:inline-block;
-            width: 14px; height: 14px;
-            border-radius: 999px;
-            border: 2px solid color-mix(in oklch, var(--border) 60%, transparent 40%);
-            border-top-color: var(--accent-color);
-            animation: sp 800ms linear infinite;
-            vertical-align: -2px;
-            margin-right: 6px;
-        }
-        @keyframes sp { to { transform: rotate(360deg); } }
-
-        .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        @media (max-width: 576px) { .grid2 { grid-template-columns: 1fr; } }
-
-        .divider {
-            height: 1px;
-            background: var(--border);
-            margin: 12px 0;
+        .customer-filter-select:focus {
+            outline: none;
+            border-color: var(--sidebar-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
         }
 
-        .hintbar {
-            margin-top: 12px;
-            padding: 10px 14px;
+        /* Table */
+        .customer-table-wrap {
+            overflow-x: auto;
+            border-radius: calc(var(--radius) + 4px);
             border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: color-mix(in oklch, var(--card) 90%, black 10%);
-            display:flex;
-            gap: 10px;
-            align-items:center;
-            justify-content:space-between;
+            background: var(--card);
+            box-shadow: var(--customer-shadow);
+        }
+
+        .customer-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .customer-table thead {
+            background: var(--muted);
+        }
+
+        .customer-table th {
+            padding: 14px 18px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted-foreground);
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            cursor: pointer;
+            user-select: none;
+            transition: color var(--transition-normal);
+        }
+
+        .customer-table th:hover {
+            color: var(--foreground);
+        }
+
+        .customer-table th .sort-icon {
+            margin-left: 4px;
+            opacity: 0.5;
+        }
+
+        .customer-table th.active .sort-icon {
+            opacity: 1;
+        }
+
+        .customer-table td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+            font-size: 14px;
+            color: var(--foreground);
+        }
+
+        .customer-table tbody tr {
+            transition: all var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--card);
+        }
+
+        .customer-table tbody tr:hover {
+            background: var(--muted);
+            transform: scale(1.002);
+        }
+
+        .customer-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .customer-name-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .customer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: calc(var(--radius) - 2px);
+            background: var(--customer-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .customer-name {
+            font-weight: 600;
+            color: var(--foreground);
+        }
+
+        .customer-phone {
+            font-size: 13px;
+            color: var(--muted-foreground);
+        }
+
+        .customer-badge {
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-block;
+        }
+
+        .customer-badge-regular {
+            background: var(--secondary);
+            color: var(--secondary-foreground);
+        }
+
+        .customer-badge-premium {
+            background: color-mix(in oklch, var(--warning) 18%, var(--card));
+            color: var(--warning);
+        }
+
+        .customer-badge-vip {
+            background: color-mix(in oklch, var(--sidebar-primary) 18%, var(--card));
+            color: var(--sidebar-primary);
+        }
+
+        .customer-badge-active {
+            background: color-mix(in oklch, var(--success) 18%, var(--card));
+            color: var(--success);
+        }
+
+        .customer-badge-inactive {
+            background: color-mix(in oklch, var(--danger) 18%, var(--card));
+            color: var(--danger);
+        }
+
+        .customer-balance {
+            font-weight: 600;
+        }
+
+        .customer-balance.due {
+            color: var(--danger);
+        }
+
+        .customer-balance.advance {
+            color: var(--success);
+        }
+
+        .customer-action-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .customer-action-btn {
+            padding: 6px 10px;
+            border-radius: calc(var(--radius) - 2px);
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .customer-action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .customer-action-btn-view {
+            background: color-mix(in oklch, var(--info) 18%, var(--card));
+            color: var(--info);
+        }
+
+        .customer-action-btn-view:hover {
+            background: color-mix(in oklch, var(--info) 30%, var(--card));
+        }
+
+        .customer-action-btn-edit {
+            background: color-mix(in oklch, var(--success) 18%, var(--card));
+            color: var(--success);
+        }
+
+        .customer-action-btn-edit:hover {
+            background: color-mix(in oklch, var(--success) 30%, var(--card));
+        }
+
+        .customer-action-btn-delete {
+            background: color-mix(in oklch, var(--danger) 18%, var(--card));
+            color: var(--danger);
+        }
+
+        .customer-action-btn-delete:hover {
+            background: color-mix(in oklch, var(--danger) 30%, var(--card));
+        }
+
+        /* Modal */
+        .customer-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .customer-modal-overlay.show {
+            display: flex;
+        }
+
+        .customer-modal {
+            background: var(--card);
+            border-radius: calc(var(--radius) + 4px);
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 32px;
+            animation: modalSlide 0.3s ease-out;
+            box-shadow: var(--dropdown-shadow);
+            border: 1px solid var(--border);
+        }
+
+        @keyframes modalSlide {
+            from {
+                transform: scale(0.9) translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .customer-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .customer-modal-header h3 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--foreground);
+        }
+
+        .customer-modal-close {
+            background: var(--muted);
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--muted-foreground);
+            transition: all var(--transition-normal);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .customer-modal-close:hover {
+            color: var(--foreground);
+            background: var(--border);
+            transform: rotate(90deg);
+        }
+
+        /* Form */
+        .customer-form-group {
+            margin-bottom: 18px;
+        }
+
+        .customer-form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--foreground);
+            margin-bottom: 6px;
+        }
+
+        .customer-form-group label .required {
+            color: var(--danger);
+            margin-left: 2px;
+        }
+
+        .customer-form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: calc(var(--radius) - 2px);
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--foreground);
+            font-size: 14px;
+            transition: all var(--transition-normal);
+        }
+
+        .customer-form-control:focus {
+            outline: none;
+            border-color: var(--sidebar-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .customer-form-control:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .customer-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .customer-container {
+                padding: 16px;
+            }
+
+            .customer-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 16px 20px;
+            }
+
+            .customer-actions {
+                width: 100%;
+            }
+
+            .customer-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .customer-toolbar {
+                flex-direction: column;
+            }
+
+            .customer-search {
+                width: 100%;
+            }
+
+            .customer-form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .customer-table td,
+            .customer-table th {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .customer-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .customer-stat-number {
+                font-size: 20px;
+            }
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 
-    <div class="page">
-        <div class="d-flex align-items-end justify-content-between mb-3">
-            <div>
-                <div class="subtle">CRM / POS</div>
-                <h3 class="title m-0">Customers</h3>
+    <div class="customer-container">
+        <!-- Header -->
+        <div class="customer-header" data-reveal>
+            <div class="customer-header-left">
+                <div class="customer-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <h1 class="customer-title">Customer <span>Management</span></h1>
+                    <p class="customer-subtitle">Manage your customer relationships</p>
+                </div>
             </div>
-
-            <div class="text-end">
-                <div class="subtle">Live Search</div>
-                <div class="strong" style="font-size: 18px;">Create • Update • Due/Advance • Rewards</div>
+            <div class="customer-actions">
+                <button class="customer-btn customer-btn-primary" onclick="openCreateModal()">
+                    <i class="fas fa-plus"></i> Add Customer
+                </button>
+                <a href="{{ route('customers.export') }}" class="customer-btn customer-btn-success">
+                    <i class="fas fa-download"></i> Export
+                </a>
             </div>
         </div>
 
-        <div class="shell">
-            {{-- LEFT: search + list --}}
-            <div class="cardx">
-                <div class="cardx-hd">
-                    <div>
-                        <div class="strong">Find Customer</div>
-                        <div class="subtle">Search by name / phone / email (2+ chars)</div>
-                    </div>
-                    <button class="btnx btnx-ghost" type="button" id="clearSearchBtn">Clear</button>
+        <!-- Stats -->
+        <div class="customer-stats" data-reveal>
+            <div class="customer-stat-card">
+                <div class="customer-stat-icon primary">
+                    <i class="fas fa-users"></i>
                 </div>
-
-                <div style="padding: 12px 14px;">
-                    <input class="inputx" id="searchInput" placeholder="Type: Rahim / 01xxxxxxxxx / mail@example.com">
-                </div>
-
-                <div id="searchResults" class="result-list"></div>
-
-                <div class="hintbar">
-                    <div class="subtle" id="sweetHint">
-                        💡 Tip: Click a customer to open details on the right. Use Balance/Rewards actions for POS.
-                    </div>
-                    <button class="btnx btnx-ghost" type="button" id="dismissHintBtn">OK</button>
+                <div class="customer-stat-content">
+                    <span class="customer-stat-number">{{ $stats['total'] }}</span>
+                    <span class="customer-stat-label">Total Customers</span>
                 </div>
             </div>
+            <div class="customer-stat-card">
+                <div class="customer-stat-icon success">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="customer-stat-content">
+                    <span class="customer-stat-number">{{ $stats['active'] }}</span>
+                    <span class="customer-stat-label">Active</span>
+                </div>
+            </div>
+            <div class="customer-stat-card">
+                <div class="customer-stat-icon danger">
+                    <i class="fas fa-user-times"></i>
+                </div>
+                <div class="customer-stat-content">
+                    <span class="customer-stat-number">{{ $stats['inactive'] }}</span>
+                    <span class="customer-stat-label">Inactive</span>
+                </div>
+            </div>
+            <div class="customer-stat-card">
+                <div class="customer-stat-icon warning">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div class="customer-stat-content">
+                    <span class="customer-stat-number">tk.{{ number_format($stats['total_due'], 2) }}</span>
+                    <span class="customer-stat-label">Total Due</span>
+                </div>
+            </div>
+            <div class="customer-stat-card">
+                <div class="customer-stat-icon info">
+                    <i class="fas fa-gem"></i>
+                </div>
+                <div class="customer-stat-content">
+                    <span class="customer-stat-number">{{ number_format($stats['total_rewards']) }}</span>
+                    <span class="customer-stat-label">Reward Points</span>
+                </div>
+            </div>
+        </div>
 
-            {{-- RIGHT: form + details --}}
-            <div class="cardx">
-                <div class="cardx-hd">
-                    <div>
-                        <div class="strong">Customer Details</div>
-                        <div class="subtle" id="panelSub">Create new or select from left</div>
+        <!-- Toolbar -->
+        <div class="customer-toolbar" data-reveal>
+            <div class="customer-search">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Search customers by name, phone, email..."
+                    value="{{ request('q') }}" oninput="applyFilters()">
+            </div>
+            <select class="customer-filter-select" id="typeFilter" onchange="applyFilters()">
+                <option value="">All Types</option>
+                @foreach($types as $type)
+                    <option value="{{ $type }}" {{ request('type') == $type ? 'selected' : '' }}>
+                        {{ ucfirst($type) }}
+                    </option>
+                @endforeach
+            </select>
+            <select class="customer-filter-select" id="statusFilter" onchange="applyFilters()">
+                <option value="">All Status</option>
+                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+            </select>
+        </div>
+
+        <!-- Table -->
+        <div class="customer-table-wrap" data-reveal>
+            <table class="customer-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('id')">
+                            ID <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th onclick="sortTable('name')">
+                            Customer <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th onclick="sortTable('type')">
+                            Type <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th onclick="sortTable('phone')">
+                            Contact <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th onclick="sortTable('due_balance')" class="text-right">
+                            Balance <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th onclick="sortTable('reward_points')" class="text-right">
+                            Rewards <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th onclick="sortTable('is_active')">
+                            Status <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($customers as $customer)
+                        <tr>
+                            <td>#{{ $customer->id }}</td>
+                            <td>
+                                <div class="customer-name-cell">
+                                    <div class="customer-avatar">
+                                        {{ strtoupper(substr($customer->name, 0, 2)) }}
+                                    </div>
+                                    <div>
+                                        <div class="customer-name">{{ $customer->name }}</div>
+                                        <div class="customer-phone">
+                                            <i class="fas fa-envelope" style="font-size: 10px;"></i>
+                                            {{ $customer->email ?? 'No email' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="customer-badge
+                                    {{ $customer->type == 'vip' ? 'customer-badge-vip' :
+                                       ($customer->type == 'premium' ? 'customer-badge-premium' :
+                                       'customer-badge-regular') }}">
+                                    {{ ucfirst($customer->type ?? 'Regular') }}
+                                </span>
+                            </td>
+                            <td>
+                                <div><i class="fas fa-phone" style="font-size: 12px; opacity: 0.6;"></i>
+                                    {{ $customer->phone ?? 'N/A' }}
+                                </div>
+                            </td>
+                            <td class="text-right">
+                                @if($customer->due_balance > 0)
+                                    <span class="customer-balance due">
+                                        <i class="fas fa-arrow-up" style="font-size: 10px;"></i>
+                                        tk.{{ number_format($customer->due_balance, 2) }}
+                                    </span>
+                                @elseif($customer->advance_balance > 0)
+                                    <span class="customer-balance advance">
+                                        <i class="fas fa-arrow-down" style="font-size: 10px;"></i>
+                                        tk.{{ number_format($customer->advance_balance, 2) }}
+                                    </span>
+                                @else
+                                    <span style="color: var(--muted-foreground);">tk 0.00</span>
+                                @endif
+                            </td>
+                            <td class="text-right">
+                                <span style="font-weight: 600; color: #7C3AED;">
+                                    {{ number_format($customer->reward_points) }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="customer-badge {{ $customer->is_active ? 'customer-badge-active' : 'customer-badge-inactive' }}">
+                                    {{ $customer->is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="customer-action-btns">
+                                    <a href="{{ route('customers.show', $customer) }}"
+                                       class="customer-action-btn customer-action-btn-view" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('customers.edit', $customer) }}"
+                                       class="customer-action-btn customer-action-btn-edit" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="customer-action-btn customer-action-btn-delete"
+                                            onclick="deleteCustomer({{ $customer->id }})" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8">
+                                <div style="padding: 60px 24px; text-align: center;">
+                                    <i class="fas fa-users" style="font-size: 48px; color: var(--muted-foreground); display: block; margin-bottom: 16px;"></i>
+                                    <h3 style="font-size: 20px; font-weight: 600; color: var(--foreground); margin-bottom: 8px;">
+                                        No Customers Found
+                                    </h3>
+                                    <p style="color: var(--muted-foreground);">
+                                        Start by adding your first customer
+                                    </p>
+                                    <button class="customer-btn customer-btn-primary" onclick="openCreateModal()" style="margin-top: 16px;">
+                                        <i class="fas fa-plus"></i> Add Customer
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if ($customers->hasPages())
+            <div style="margin-top: 24px;">
+                {{ $customers->appends(request()->query())->links('vendor.pagination.custom') }}
+            </div>
+        @endif
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div class="customer-modal-overlay" id="customerModal">
+        <div class="customer-modal">
+            <div class="customer-modal-header">
+                <h3 id="modalTitle">Add Customer</h3>
+                <button class="customer-modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="customerForm" onsubmit="saveCustomer(event)">
+                @csrf
+                <input type="hidden" id="customerId" name="id">
+
+                <div class="customer-form-group">
+                    <label>Full Name <span class="required">*</span></label>
+                    <input type="text" class="customer-form-control" id="name" name="name" required>
+                </div>
+
+                <div class="customer-form-row">
+                    <div class="customer-form-group">
+                        <label>Phone</label>
+                        <input type="text" class="customer-form-control" id="phone" name="phone">
                     </div>
-                    <div style="display:flex; gap:8px; align-items:center;">
-                        <button class="btnx btnx-ghost" type="button" id="newBtn">New</button>
-                        <button class="btnx btnx-danger" type="button" id="deactivateBtn" style="display:none;">Deactivate</button>
+                    <div class="customer-form-group">
+                        <label>Email</label>
+                        <input type="email" class="customer-form-control" id="email" name="email">
                     </div>
                 </div>
 
-                <div style="padding: 12px 14px;">
-                    <input type="hidden" id="customerId" value="">
-
-                    <div class="grid2">
-                        <div>
-                            <div class="subtle mb-1">Name</div>
-                            <input class="inputx" id="name" placeholder="Customer name">
-                        </div>
-                        <div>
-                            <div class="subtle mb-1">Type</div>
-                            <select class="selectx" id="type">
-                                <option value="regular">Regular</option>
-                                <option value="vip">VIP</option>
-                                <option value="wholesale">Wholesale</option>
-                                <option value="staff">Staff</option>
-                            </select>
-                        </div>
+                <div class="customer-form-row">
+                    <div class="customer-form-group">
+                        <label>Type</label>
+                        <select class="customer-form-control" id="type" name="type">
+                            <option value="regular">Regular</option>
+                            <option value="premium">Premium</option>
+                            <option value="vip">VIP</option>
+                        </select>
                     </div>
-
-                    <div class="grid2 mt-2">
-                        <div>
-                            <div class="subtle mb-1">Phone</div>
-                            <input class="inputx" id="phone" placeholder="01xxxxxxxxx">
-                        </div>
-                        <div>
-                            <div class="subtle mb-1">Email</div>
-                            <input class="inputx" id="email" placeholder="mail@example.com">
-                        </div>
-                    </div>
-
-                    <div class="mt-2">
-                        <div class="subtle mb-1">Address</div>
-                        <textarea class="textareax" id="address" placeholder="Address"></textarea>
-                    </div>
-
-                    <div class="mt-2">
-                        <div class="subtle mb-1">Notes</div>
-                        <textarea class="textareax" id="notes" placeholder="Notes (optional)"></textarea>
-                    </div>
-
-                    <div class="divider"></div>
-
-                    <div class="grid2">
-                        <div class="cardx" style="padding:10px 12px;">
-                            <div class="subtle">Due</div>
-                            <div class="strong" style="font-size: 18px;">
-                                ৳ <span id="dueBalance">0.00</span>
-                            </div>
-                        </div>
-                        <div class="cardx" style="padding:10px 12px;">
-                            <div class="subtle">Advance</div>
-                            <div class="strong" style="font-size: 18px;">
-                                ৳ <span id="advanceBalance">0.00</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="cardx mt-2" style="padding:10px 12px;">
-                        <div class="subtle">Reward Points</div>
-                        <div class="strong" style="font-size: 18px;">
-                            <span id="rewardPoints">0.00</span>
-                        </div>
-                    </div>
-
-                    <div class="divider"></div>
-
-                    <div style="display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
-                        <button class="btnx btnx-ghost" type="button" id="resetBtn">Reset</button>
-                        <button class="btnx" type="button" id="saveBtn">Save</button>
+                    <div class="customer-form-group">
+                        <label>Status</label>
+                        <select class="customer-form-control" id="is_active" name="is_active">
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
+                        </select>
                     </div>
                 </div>
 
-                {{-- Actions: Due/Advance + Rewards --}}
-                <div style="border-top: 1px solid var(--border); padding: 12px 14px;">
-                    <div class="strong">POS Actions</div>
-                    <div class="subtle">Add due/advance or rewards. Supports online/offline (channel/terminal/idempotency).</div>
-
-                    <div class="divider"></div>
-
-                    <div class="grid2">
-                        <div class="cardx" style="padding: 10px 12px;">
-                            <div class="strong">Balance (Due / Advance)</div>
-
-                            <div class="grid2 mt-2">
-                                <div>
-                                    <div class="subtle mb-1">Kind</div>
-                                    <select class="selectx" id="balKind">
-                                        <option value="due">Due</option>
-                                        <option value="advance">Advance</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <div class="subtle mb-1">Direction</div>
-                                    <select class="selectx" id="balDir">
-                                        <option value="debit">Debit (Increase)</option>
-                                        <option value="credit">Credit (Decrease)</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="mt-2">
-                                <div class="subtle mb-1">Amount</div>
-                                <input class="inputx" id="balAmount" type="number" step="0.01" min="0.01" value="0">
-                            </div>
-
-                            <div class="grid2 mt-2">
-                                <div>
-                                    <div class="subtle mb-1">Channel</div>
-                                    <select class="selectx" id="balChannel">
-                                        <option value="pos" selected>POS</option>
-                                        <option value="offline">Offline</option>
-                                        <option value="online">Online</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <div class="subtle mb-1">Terminal ID</div>
-                                    <input class="inputx" id="balTerminal" placeholder="POS-01">
-                                </div>
-                            </div>
-
-                            <div class="mt-2">
-                                <div class="subtle mb-1">Note</div>
-                                <input class="inputx" id="balNote" placeholder="Payment / Adjustment note">
-                            </div>
-
-                            <div class="mt-2" style="display:flex; justify-content:flex-end;">
-                                <button class="btnx" type="button" id="postBalanceBtn">Post Balance</button>
-                            </div>
-                        </div>
-
-                        <div class="cardx" style="padding: 10px 12px;">
-                            <div class="strong">Rewards</div>
-
-                            <div class="grid2 mt-2">
-                                <div>
-                                    <div class="subtle mb-1">Action</div>
-                                    <select class="selectx" id="rwAction">
-                                        <option value="earn">Earn</option>
-                                        <option value="redeem">Redeem</option>
-                                        <option value="adjust">Adjust</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <div class="subtle mb-1">Direction</div>
-                                    <select class="selectx" id="rwDir">
-                                        <option value="add">Add</option>
-                                        <option value="subtract">Subtract</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="mt-2">
-                                <div class="subtle mb-1">Points</div>
-                                <input class="inputx" id="rwPoints" type="number" step="0.01" min="0.01" value="0">
-                            </div>
-
-                            <div class="grid2 mt-2">
-                                <div>
-                                    <div class="subtle mb-1">Channel</div>
-                                    <select class="selectx" id="rwChannel">
-                                        <option value="pos" selected>POS</option>
-                                        <option value="offline">Offline</option>
-                                        <option value="online">Online</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <div class="subtle mb-1">Terminal ID</div>
-                                    <input class="inputx" id="rwTerminal" placeholder="POS-01">
-                                </div>
-                            </div>
-
-                            <div class="mt-2">
-                                <div class="subtle mb-1">Note</div>
-                                <input class="inputx" id="rwNote" placeholder="Reward note">
-                            </div>
-
-                            <div class="mt-2" style="display:flex; justify-content:flex-end;">
-                                <button class="btnx" type="button" id="postRewardsBtn">Post Rewards</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="divider"></div>
-
-                    <div class="strong">Recent Activity</div>
-                    <div class="subtle">Last 10 balance entries + last 10 rewards entries</div>
-
-                    <div class="divider"></div>
-
-                    <div style="max-height: 260px; overflow:auto;">
-                        <table class="tablex">
-                            <thead>
-                                <tr>
-                                    <th>Type</th>
-                                    <th>Info</th>
-                                    <th class="money">Amount</th>
-                                    <th class="money">When</th>
-                                </tr>
-                            </thead>
-                            <tbody id="activityBody">
-                                <tr>
-                                    <td colspan="4" class="subtle" style="padding: 14px;">Select a customer to load activity.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
+                <div class="customer-form-group">
+                    <label>Address</label>
+                    <input type="text" class="customer-form-control" id="address" name="address">
                 </div>
+
+                <div class="customer-form-group">
+                    <label>Notes</label>
+                    <textarea class="customer-form-control" id="notes" name="notes" rows="3"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" class="customer-btn customer-btn-ghost" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="customer-btn customer-btn-primary">Save Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="customer-modal-overlay" id="deleteModal">
+        <div class="customer-modal" style="max-width: 450px;">
+            <div class="customer-modal-header">
+                <h3>Delete Customer</h3>
+                <button class="customer-modal-close" onclick="closeDeleteModal()">×</button>
+            </div>
+            <div style="margin-bottom: 24px;">
+                <p style="font-size: 15px; color: var(--muted-foreground);">
+                    Are you sure you want to delete this customer? This action cannot be undone.
+                </p>
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button class="customer-btn customer-btn-ghost" onclick="closeDeleteModal()">Cancel</button>
+                <button class="customer-btn customer-btn-danger" id="confirmDeleteBtn">Delete</button>
             </div>
         </div>
     </div>
 
-    <div class="toast-mini" id="miniToast"></div>
+    <script>
+        let deleteCustomerId = null;
 
-</div>
+        // Apply filters
+        function applyFilters() {
+            const search = document.getElementById('searchInput').value;
+            const type = document.getElementById('typeFilter').value;
+            const status = document.getElementById('statusFilter').value;
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const toastEl = document.getElementById('miniToast');
+            let url = new URL(window.location.href);
+            if (search) url.searchParams.set('q', search);
+            else url.searchParams.delete('q');
+            if (type) url.searchParams.set('type', type);
+            else url.searchParams.delete('type');
+            if (status) url.searchParams.set('status', status);
+            else url.searchParams.delete('status');
 
-    const searchInput = document.getElementById('searchInput');
-    const searchResults = document.getElementById('searchResults');
-    const clearSearchBtn = document.getElementById('clearSearchBtn');
+            window.location.href = url.toString();
+        }
 
-    const customerIdEl = document.getElementById('customerId');
-    const panelSub = document.getElementById('panelSub');
+        // Sort table
+        function sortTable(field) {
+            const url = new URL(window.location.href);
+            const currentSort = url.searchParams.get('sort');
+            const currentDirection = url.searchParams.get('direction');
 
-    const nameEl = document.getElementById('name');
-    const phoneEl = document.getElementById('phone');
-    const emailEl = document.getElementById('email');
-    const typeEl = document.getElementById('type');
-    const addressEl = document.getElementById('address');
-    const notesEl = document.getElementById('notes');
+            if (currentSort === field) {
+                url.searchParams.set('direction', currentDirection === 'asc' ? 'desc' : 'asc');
+            } else {
+                url.searchParams.set('sort', field);
+                url.searchParams.set('direction', 'asc');
+            }
 
-    const dueBalanceEl = document.getElementById('dueBalance');
-    const advanceBalanceEl = document.getElementById('advanceBalance');
-    const rewardPointsEl = document.getElementById('rewardPoints');
+            window.location.href = url.toString();
+        }
 
-    const activityBody = document.getElementById('activityBody');
+        // Open create modal
+        function openCreateModal() {
+            document.getElementById('modalTitle').textContent = 'Add Customer';
+            document.getElementById('customerId').value = '';
+            document.getElementById('customerForm').reset();
+            document.getElementById('customerModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
 
-    const saveBtn = document.getElementById('saveBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const newBtn = document.getElementById('newBtn');
-    const deactivateBtn = document.getElementById('deactivateBtn');
+        // Open edit modal
+        function openEditModal(id) {
+            fetch(`/customers/tk.{id}/edit`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('modalTitle').textContent = 'Edit Customer';
+                    document.getElementById('customerId').value = data.customer.id;
+                    document.getElementById('name').value = data.customer.name;
+                    document.getElementById('phone').value = data.customer.phone || '';
+                    document.getElementById('email').value = data.customer.email || '';
+                    document.getElementById('type').value = data.customer.type || 'regular';
+                    document.getElementById('is_active').value = data.customer.is_active ? '1' : '0';
+                    document.getElementById('address').value = data.customer.address || '';
+                    document.getElementById('notes').value = data.customer.notes || '';
+                    document.getElementById('customerModal').classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to load customer data');
+                });
+        }
 
-    const postBalanceBtn = document.getElementById('postBalanceBtn');
-    const postRewardsBtn = document.getElementById('postRewardsBtn');
+        // Close modal
+        function closeModal() {
+            document.getElementById('customerModal').classList.remove('show');
+            document.body.style.overflow = '';
+        }
 
-    const balKind = document.getElementById('balKind');
-    const balDir = document.getElementById('balDir');
-    const balAmount = document.getElementById('balAmount');
-    const balChannel = document.getElementById('balChannel');
-    const balTerminal = document.getElementById('balTerminal');
-    const balNote = document.getElementById('balNote');
+        // Close delete modal
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('show');
+            document.body.style.overflow = '';
+        }
 
-    const rwAction = document.getElementById('rwAction');
-    const rwDir = document.getElementById('rwDir');
-    const rwPoints = document.getElementById('rwPoints');
-    const rwChannel = document.getElementById('rwChannel');
-    const rwTerminal = document.getElementById('rwTerminal');
-    const rwNote = document.getElementById('rwNote');
+        // Save customer
+        function saveCustomer(event) {
+            event.preventDefault();
+            const form = document.getElementById('customerForm');
+            const id = document.getElementById('customerId').value;
+            const formData = new FormData(form);
 
-    const dismissHintBtn = document.getElementById('dismissHintBtn');
-    const sweetHint = document.getElementById('sweetHint');
+            const url = id ? `/customers/tk.{id}` : '/customers';
+            const method = id ? 'PUT' : 'POST';
 
-    let debounceTimer = null;
+            // Convert FormData to object
+            const data = {};
+            formData.forEach((value, key) => {
+                if (key !== '_token') {
+                    data[key] = value;
+                }
+            });
 
-    function toast(msg) {
-        toastEl.textContent = msg;
-        toastEl.style.display = 'block';
-        clearTimeout(toastEl._t);
-        toastEl._t = setTimeout(() => toastEl.style.display = 'none', 1600);
-    }
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeModal();
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while saving the customer');
+            });
+        }
 
-    function money(n) { return Number(n || 0).toFixed(2); }
+        // Delete customer
+        function deleteCustomer(id) {
+            deleteCustomerId = id;
+            document.getElementById('deleteModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
 
-    function setHint(msg) {
-        sweetHint.textContent = msg || "💡 Tip: Click a customer to open details on the right. Use Balance/Rewards actions for POS.";
-    }
+        // Confirm delete
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+            if (!deleteCustomerId) return;
 
-    function initials(name) {
-        const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
-        if (!parts.length) return '?';
-        return (parts[0][0] + (parts[1]?.[0] || '')).toUpperCase();
-    }
-
-    async function jsonFetch(url, method, payload) {
-        const res = await fetch(url, {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            },
-            body: payload ? JSON.stringify(payload) : null
-        });
-        const data = await res.json().catch(() => ({}));
-        return { res, data };
-    }
-
-    function resetForm() {
-        customerIdEl.value = '';
-        panelSub.textContent = 'Create new or select from left';
-
-        nameEl.value = '';
-        phoneEl.value = '';
-        emailEl.value = '';
-        typeEl.value = 'regular';
-        addressEl.value = '';
-        notesEl.value = '';
-
-        dueBalanceEl.textContent = '0.00';
-        advanceBalanceEl.textContent = '0.00';
-        rewardPointsEl.textContent = '0.00';
-
-        activityBody.innerHTML = `<tr><td colspan="4" class="subtle" style="padding: 14px;">Select a customer to load activity.</td></tr>`;
-
-        deactivateBtn.style.display = 'none';
-    }
-
-    function fillCustomer(c) {
-        customerIdEl.value = c.id;
-        panelSub.textContent = `Selected: #${c.id} • ${c.name}`;
-
-        nameEl.value = c.name ?? '';
-        phoneEl.value = c.phone ?? '';
-        emailEl.value = c.email ?? '';
-        typeEl.value = c.type ?? 'regular';
-        addressEl.value = c.address ?? '';
-        notesEl.value = c.notes ?? '';
-
-        dueBalanceEl.textContent = money(c.due_balance);
-        advanceBalanceEl.textContent = money(c.advance_balance);
-        rewardPointsEl.textContent = money(c.reward_points);
-
-        deactivateBtn.style.display = 'inline-block';
-    }
-
-    function renderActivity(customer) {
-        const balances = customer.balance_ledgers || [];
-        const rewards = customer.reward_ledgers || [];
-
-        const rows = [];
-
-        balances.slice(0, 10).forEach(b => {
-            rows.push({
-                type: `Balance • ${b.kind}`,
-                info: `${b.direction} • ${b.channel}${b.terminal_id ? ' • ' + b.terminal_id : ''}${b.note ? ' • ' + b.note : ''}`,
-                amount: (b.direction === 'debit' ? '+' : '-') + money(b.amount),
-                when: new Date(b.created_at).toLocaleString()
+            fetch(`/customers/${deleteCustomerId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                closeDeleteModal();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the customer');
+                closeDeleteModal();
             });
         });
 
-        rewards.slice(0, 10).forEach(r => {
-            rows.push({
-                type: `Rewards • ${r.action}`,
-                info: `${r.direction} • ${r.channel}${r.terminal_id ? ' • ' + r.terminal_id : ''}${r.note ? ' • ' + r.note : ''}`,
-                amount: (r.direction === 'add' ? '+' : '-') + money(r.points),
-                when: new Date(r.created_at).toLocaleString()
+        // Close modals on overlay click
+        document.querySelectorAll('.customer-modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
             });
         });
 
-        // newest first
-        rows.sort((a,b) => new Date(b.when) - new Date(a.when));
-
-        if (!rows.length) {
-            activityBody.innerHTML = `<tr><td colspan="4" class="subtle" style="padding: 14px;">No activity yet.</td></tr>`;
-            return;
-        }
-
-        activityBody.innerHTML = rows.slice(0, 20).map(r => `
-            <tr>
-                <td class="strong">${r.type}</td>
-                <td class="muted">${escapeHtml(r.info)}</td>
-                <td class="money strong">${escapeHtml(r.amount)}</td>
-                <td class="money muted">${escapeHtml(r.when)}</td>
-            </tr>
-        `).join('');
-    }
-
-    function escapeHtml(str) {
-        return String(str ?? '')
-            .replaceAll('&','&amp;')
-            .replaceAll('<','&lt;')
-            .replaceAll('>','&gt;')
-            .replaceAll('"','&quot;')
-            .replaceAll("'","&#039;");
-    }
-
-    async function loadCustomer(id) {
-        const { res, data } = await jsonFetch(`{{ url('/customers') }}/${id}`, 'GET');
-        if (!res.ok || !data.success) {
-            toast(data.message ?? 'Failed to load customer');
-            return;
-        }
-        fillCustomer(data.customer);
-        renderActivity(data.customer);
-        toast('Loaded');
-    }
-
-    function renderSearch(rows) {
-        searchResults.innerHTML = '';
-
-        if (!Array.isArray(rows) || rows.length === 0) {
-            searchResults.innerHTML = `<div style="padding: 12px 14px;" class="subtle">No customers found</div>`;
-            return;
-        }
-
-        rows.forEach(c => {
-            const row = document.createElement('div');
-            row.className = 'result-row';
-
-            const due = Number(c.due_balance || 0);
-            const adv = Number(c.advance_balance || 0);
-            const pts = Number(c.reward_points || 0);
-
-            row.innerHTML = `
-                <div class="avatar">${initials(c.name)}</div>
-                <div style="flex:1;">
-                    <div class="r-title">${escapeHtml(c.name)} <span class="subtle" style="font-weight:850;">(#${c.id})</span></div>
-                    <div class="r-meta">
-                        ${c.phone ? `📞 ${escapeHtml(c.phone)}` : '📞 —'}
-                        ${c.email ? ` • ✉️ ${escapeHtml(c.email)}` : ''}
-                    </div>
-                    <div class="r-meta" style="margin-top:6px; display:flex; gap:8px; flex-wrap:wrap;">
-                        <span class="pill ${due>0 ? 'warn' : 'ok'}">Due: <b>৳${money(due)}</b></span>
-                        <span class="pill ${adv>0 ? 'info' : ''}">Adv: <b>৳${money(adv)}</b></span>
-                        <span class="pill">Pts: <b>${money(pts)}</b></span>
-                    </div>
-                </div>
-                <div>
-                    <span class="pill">${escapeHtml(c.type || 'regular')}</span>
-                </div>
-            `;
-
-            row.addEventListener('click', () => loadCustomer(c.id));
-            searchResults.appendChild(row);
-        });
-    }
-
-    async function doSearch(term) {
-        if (term.length < 2) {
-            searchResults.innerHTML = '';
-            return;
-        }
-
-        searchResults.innerHTML = `<div style="padding: 12px 14px;" class="subtle"><span class="spin"></span>Searching...</div>`;
-
-        // Uses your quick search endpoint
-        const res = await fetch(`{{ route('customers.quick.search') }}?q=${encodeURIComponent(term)}`, {
-            headers: { 'Accept': 'application/json' }
+        // Close modals on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.customer-modal-overlay.show').forEach(modal => {
+                    modal.classList.remove('show');
+                });
+                document.body.style.overflow = '';
+            }
         });
 
-        const data = await res.json().catch(() => []);
-        renderSearch(data);
-    }
-
-    async function saveCustomer() {
-        const id = customerIdEl.value;
-
-        const payload = {
-            name: nameEl.value.trim(),
-            phone: phoneEl.value.trim() || null,
-            email: emailEl.value.trim() || null,
-            type: typeEl.value,
-            address: addressEl.value.trim() || null,
-            notes: notesEl.value.trim() || null,
-        };
-
-        if (!payload.name) {
-            toast('Name is required');
-            return;
-        }
-
-        saveBtn.disabled = true;
-        saveBtn._old = saveBtn.innerHTML;
-        saveBtn.innerHTML = `<span class="spin"></span>Saving`;
-
-        const url = id ? `{{ url('/customers') }}/${id}` : `{{ url('/customers') }}`;
-        const method = id ? 'PUT' : 'POST';
-
-        const { res, data } = await jsonFetch(url, method, payload);
-
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = saveBtn._old || 'Save';
-
-        if (!res.ok || !data.success) {
-            toast(data.message ?? 'Save failed');
-            return;
-        }
-
-        const c = data.customer;
-        fillCustomer(c);
-        toast(id ? 'Updated' : 'Created');
-
-        setHint('✅ Saved! You can now post due/advance or rewards for this customer.');
-
-        // refresh search list if query exists
-        const q = searchInput.value.trim();
-        if (q.length >= 2) doSearch(q);
-    }
-
-    async function postBalance() {
-        const id = customerIdEl.value;
-        if (!id) { toast('Select a customer first'); return; }
-
-        const amount = Number(balAmount.value || 0);
-        if (amount <= 0) { toast('Amount must be > 0'); return; }
-
-        postBalanceBtn.disabled = true;
-        postBalanceBtn._old = postBalanceBtn.innerHTML;
-        postBalanceBtn.innerHTML = `<span class="spin"></span>Posting`;
-
-        const payload = {
-            kind: balKind.value,
-            direction: balDir.value,
-            amount: amount,
-            channel: balChannel.value,
-            terminal_id: balTerminal.value.trim() || null,
-            note: balNote.value.trim() || null,
-
-            // ✅ optional idempotency key for offline protection
-            idempotency_key: `${balChannel.value}-${balTerminal.value.trim() || 'NA'}-${Date.now()}`
-        };
-
-        const { res, data } = await jsonFetch(`{{ url('/customers') }}/${id}/balance`, 'POST', payload);
-
-        postBalanceBtn.disabled = false;
-        postBalanceBtn.innerHTML = postBalanceBtn._old || 'Post Balance';
-
-        if (!res.ok || !data.success) {
-            toast(data.message ?? 'Balance post failed');
-            return;
-        }
-
-        // reload customer to get ledgers for activity section
-        await loadCustomer(id);
-
-        balAmount.value = 0;
-        balNote.value = '';
-        toast('Balance posted');
-
-        setHint('✨ Balance updated. Tip: Use Due debit for credit sale, Due credit for payment.');
-    }
-
-    async function postRewards() {
-        const id = customerIdEl.value;
-        if (!id) { toast('Select a customer first'); return; }
-
-        const points = Number(rwPoints.value || 0);
-        if (points <= 0) { toast('Points must be > 0'); return; }
-
-        postRewardsBtn.disabled = true;
-        postRewardsBtn._old = postRewardsBtn.innerHTML;
-        postRewardsBtn.innerHTML = `<span class="spin"></span>Posting`;
-
-        const payload = {
-            action: rwAction.value,
-            direction: rwDir.value,
-            points: points,
-            channel: rwChannel.value,
-            terminal_id: rwTerminal.value.trim() || null,
-            note: rwNote.value.trim() || null,
-
-            idempotency_key: `${rwChannel.value}-${rwTerminal.value.trim() || 'NA'}-${Date.now()}`
-        };
-
-        const { res, data } = await jsonFetch(`{{ url('/customers') }}/${id}/rewards`, 'POST', payload);
-
-        postRewardsBtn.disabled = false;
-        postRewardsBtn.innerHTML = postRewardsBtn._old || 'Post Rewards';
-
-        if (!res.ok || !data.success) {
-            toast(data.message ?? 'Rewards post failed');
-            return;
-        }
-
-        await loadCustomer(id);
-
-        rwPoints.value = 0;
-        rwNote.value = '';
-        toast('Rewards posted');
-
-        setHint('✨ Rewards updated. Tip: Redeem subtracts points (must have enough).');
-    }
-
-    async function deactivateCustomer() {
-        const id = customerIdEl.value;
-        if (!id) return;
-
-        const { res, data } = await jsonFetch(`{{ url('/customers') }}/${id}`, 'PUT', { is_active: false });
-
-        if (!res.ok || !data.success) {
-            toast(data.message ?? 'Deactivate failed');
-            return;
-        }
-
-        toast('Deactivated');
-        setHint('🛑 Customer is now inactive. They won’t appear in quick search (only active shown).');
-
-        // refresh and reset
-        resetForm();
-        const q = searchInput.value.trim();
-        if (q.length >= 2) doSearch(q);
-    }
-
-    // Events
-    searchInput.addEventListener('input', function() {
-        clearTimeout(debounceTimer);
-        const term = this.value.trim();
-        debounceTimer = setTimeout(() => doSearch(term), 220);
-    });
-
-    clearSearchBtn.addEventListener('click', () => {
-        searchInput.value = '';
-        searchResults.innerHTML = '';
-        searchInput.focus();
-    });
-
-    saveBtn.addEventListener('click', saveCustomer);
-    resetBtn.addEventListener('click', resetForm);
-    newBtn.addEventListener('click', () => { resetForm(); toast('New customer'); });
-
-    deactivateBtn.addEventListener('click', () => {
-        if (confirm('Deactivate this customer?')) deactivateCustomer();
-    });
-
-    postBalanceBtn.addEventListener('click', postBalance);
-    postRewardsBtn.addEventListener('click', postRewards);
-
-    dismissHintBtn.addEventListener('click', () => setHint('✅ Ready. Search or create customer, then post due/advance/rewards.'));
-
-    // init
-    resetForm();
-});
-</script>
+        // Debounce search
+        let searchTimeout;
+        document.getElementById('searchInput').addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(applyFilters, 500);
+        });
+    </script>
 @endsection

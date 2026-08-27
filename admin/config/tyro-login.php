@@ -89,12 +89,12 @@ return [
     'branding' => [
         // Your application name shown on all auth pages
         // Defaults to APP_NAME from Laravel config, or 'Laravel' if not set
-        'app_name' => env('TYRO_LOGIN_APP_NAME', env('APP_NAME', 'Laravel')),
+        'app_name' => env('TYRO_LOGIN_APP_NAME', env('APP_NAME', 'JOJOBI MART')),
 
         // Logo URL (recommended: SVG or high-res PNG)
         // Set to null to use text-based logo with app name
         // Example: 'https://yourapp.com/logo.svg' or '/images/logo.png'
-        'logo' => env('TYRO_LOGIN_LOGO', null),
+        'logo' => env('TYRO_LOGIN_LOGO', 'https://res.cloudinary.com/j5hwc1lb/image/upload/w_200,h_120,c_fill/v1784021653/jojobi_bsoarv.png'),
 
         // Logo height for proper display scaling
         // Accepts any valid CSS height value (px, rem, etc.)
@@ -127,7 +127,8 @@ return [
         'after_login' => env('TYRO_LOGIN_REDIRECT_AFTER_LOGIN', '/me'),
         'after_logout' => env('TYRO_LOGIN_REDIRECT_AFTER_LOGOUT', '/login'),
         'after_register' => env('TYRO_LOGIN_REDIRECT_AFTER_REGISTER', '/me'),
-        'after_email_verification' => env('TYRO_LOGIN_REDIRECT_AFTER_EMAIL_VERIFICATION', '/me'),
+        // Where to redirect after email verification (default: login page)
+        'after_email_verification' => env('TYRO_LOGIN_REDIRECT_AFTER_EMAIL_VERIFICATION', '/login'),
     ],
 
     /*
@@ -138,16 +139,6 @@ return [
 'registration' => [
     // Require email verification after registration
     'require_email_verification' => env('TYRO_LOGIN_REQUIRE_EMAIL_VERIFICATION', false),
-],
-
-'verification' => [
-    // Token expiration time in minutes
-    'expire' => env('TYRO_LOGIN_VERIFICATION_EXPIRE', 60),
-],
-
-'redirects' => [
-    // Where to redirect after email verification (default: login page)
-    'after_email_verification' => env('TYRO_LOGIN_REDIRECT_AFTER_EMAIL_VERIFICATION', '/login'),
 ],
 
     /*

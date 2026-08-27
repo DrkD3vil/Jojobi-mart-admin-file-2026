@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Report;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Report\Concerns\ReportFilters;
 use App\Models\Expense;
 use App\Models\Location;
 use App\Models\Product;
@@ -16,7 +17,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FinancialTodayDashboardController extends Controller
 {
-    private const CACHE_VERSION = 'today_v7_expense_profit_sell';
+    use ReportFilters;
+
+    private const CACHE_VERSION = 'today_v9_net_refunds';
     private const TTL_PAYLOAD = 10;     // dashboard payload cache
     private const TTL_RT = 2;           // realtime counters cache
     private const TTL_LOC = 3600;       // locations cache
@@ -37,15 +40,28 @@ class FinancialTodayDashboardController extends Controller
         return $r->filled('location_id') ? (int) $r->get('location_id') : null;
     }
 
+    /**
+     * Apply order filters - EXCLUDE sub-orders (child orders)
+     * Sub-orders should not count in financial metrics
+     */
     private function applyValidOrders($q)
     {
-        // exclude cancelled/void
-        return $q->whereNotIn('o.status', ['cancelled', 'canceled', 'void']);
+        return $q
+            ->tap(fn ($qq) => $this->excludeInvalidStatuses($qq))
+            // Exclude child orders (sub-orders) from all calculations
+            ->tap(fn ($qq) => $this->excludeSplitChildren($qq));
+    }
+
+    /**
+     * Apply order filters for sub-orders only (used for specific cases)
+     */
+    private function applySubOrdersOnly($q)
+    {
+        return $q->where('o.is_split_child', true);
     }
 
     private function applyValidExpenses($q)
     {
-        // Expense uses SoftDeletes, query builder must exclude deleted rows manually
         return $q->whereNull('e.deleted_at');
     }
 
@@ -65,6 +81,10 @@ class FinancialTodayDashboardController extends Controller
         return Cache::remember($key, self::TTL_RT, function () use ($locationId) {
             $pending = (int) DB::table('orders')
                 ->where('status', 'pending')
+                ->where(function($q) {
+                    $q->where('is_split_child', false)
+                      ->orWhereNull('is_split_child');
+                })
                 ->when($locationId, fn($q) => $q->where('location_id', $locationId))
                 ->count();
 
@@ -86,7 +106,7 @@ class FinancialTodayDashboardController extends Controller
     }
 
     /* =========================
-     | Recent Orders Query (Paginated)
+     | Recent Orders Query (Paginated) - Excludes Sub-Orders
      ========================= */
     private function recentOrdersPaginator(?int $locationId, int $page = 1, int $perPage = self::RECENT_PER_PAGE)
     {
@@ -105,6 +125,7 @@ class FinancialTodayDashboardController extends Controller
                 'o.payable_total',
                 'o.status',
                 'o.payment_status',
+                'o.is_split_child',
                 DB::raw('COALESCE(c.name, "Guest") as customer_name'),
             ])
             ->orderByDesc('o.created_at')
@@ -122,6 +143,7 @@ class FinancialTodayDashboardController extends Controller
                 'payable_total' => (float) $o->payable_total,
                 'status' => $o->status,
                 'payment_status' => $o->payment_status,
+                'is_split_child' => (bool) $o->is_split_child,
                 'customer' => ['name' => $o->customer_name ?? 'Guest'],
             ])->values(),
             'meta' => [
@@ -137,6 +159,7 @@ class FinancialTodayDashboardController extends Controller
 
     /* =========================
      | Strong Today Payload (with Expense + Sell Qty + Profit after Expense)
+     | EXCLUDES SUB-ORDERS FROM ALL CALCULATIONS
      ========================= */
     private function buildTodayPayload(?int $locationId, int $page = 1): array
     {
@@ -145,7 +168,7 @@ class FinancialTodayDashboardController extends Controller
         return Cache::remember($key, self::TTL_PAYLOAD, function () use ($locationId, $page) {
             [$start, $end] = $this->todayRange();
 
-            // 1) Orders aggregation (gross sales from orders)
+            // 1) Orders aggregation (gross sales from orders) - EXCLUDES SUB-ORDERS
             $ordersAgg = DB::table('orders as o')
                 ->whereBetween('o.created_at', [$start, $end])
                 ->when($locationId, fn($q) => $q->where('o.location_id', $locationId))
@@ -163,7 +186,7 @@ class FinancialTodayDashboardController extends Controller
             $totalDiscounts  = (float) ($ordersAgg->total_discounts ?? 0);
             $avgOrderValue   = (float) ($ordersAgg->avg_order_value ?? 0);
 
-            // 2) Sales fallback (sum order_items.total_price)
+            // 2) Sales fallback (sum order_items.total_price) - EXCLUDES SUB-ORDERS
             $grossSalesItems = (float) (DB::table('order_items as oi')
                 ->join('orders as o', 'oi.order_id', '=', 'o.id')
                 ->whereBetween('o.created_at', [$start, $end])
@@ -178,10 +201,10 @@ class FinancialTodayDashboardController extends Controller
                 $avgOrderValue = $totalOrders > 0 ? ($grossSales / $totalOrders) : 0;
             }
 
-            // 3) Payments (cash received)
+            // 3) Payments (cash received) - EXCLUDES SUB-ORDERS
             $paidAmount = (float) (DB::table('payments as p')
                 ->join('orders as o', 'p.order_id', '=', 'o.id')
-                ->where('p.status', 'completed')
+                ->where('p.status', 'captured')
                 ->whereBetween('p.created_at', [$start, $end])
                 ->when($locationId, fn($q) => $q->where('o.location_id', $locationId))
                 ->tap(fn($q) => $this->applyValidOrders($q))
@@ -190,7 +213,7 @@ class FinancialTodayDashboardController extends Controller
 
             $paymentMethods = DB::table('payments as p')
                 ->join('orders as o', 'p.order_id', '=', 'o.id')
-                ->where('p.status', 'completed')
+                ->where('p.status', 'captured')
                 ->whereBetween('p.created_at', [$start, $end])
                 ->when($locationId, fn($q) => $q->where('o.location_id', $locationId))
                 ->tap(fn($q) => $this->applyValidOrders($q))
@@ -206,12 +229,12 @@ class FinancialTodayDashboardController extends Controller
                     'count' => (int) $r->count,
                 ])->values();
 
-            // 4) Paid Orders count (MySQL-safe)
+            // 4) Paid Orders count - EXCLUDES SUB-ORDERS
             $paidOrdersCount = (int) DB::table('orders as o')
                 ->joinSub(
                     DB::table('payments')
                         ->select('order_id', DB::raw('SUM(amount) as paid_sum'))
-                        ->where('status', 'completed')
+                        ->where('status', 'captured')
                         ->whereBetween('created_at', [$start, $end])
                         ->groupBy('order_id'),
                     'pp',
@@ -221,32 +244,36 @@ class FinancialTodayDashboardController extends Controller
                 )
                 ->whereBetween('o.created_at', [$start, $end])
                 ->when($locationId, fn($q) => $q->where('o.location_id', $locationId))
-                ->whereNotIn('o.status', ['cancelled', 'canceled', 'void'])
+                ->tap(fn($q) => $this->applyValidOrders($q))
                 ->whereRaw('pp.paid_sum >= o.payable_total')
                 ->count();
 
-            // 5) Refunds: today returns ONLY for today orders
-            $returnsAgg = DB::table('returns as r')
+            // 5) Refunds: today returns ONLY for today orders - EXCLUDES SUB-ORDERS
+            // Line-level source (return_items), matching the Analysis dashboard.
+            $returnsAgg = $this->baseReturnsQuery()
                 ->join('orders as o', 'r.order_id', '=', 'o.id')
                 ->whereBetween('r.created_at', [$start, $end])
                 ->whereBetween('o.created_at', [$start, $end])
                 ->when($locationId, fn($q) => $q->where('r.location_id', $locationId))
+                ->tap(fn($q) => $this->applyValidOrders($q))
                 ->selectRaw('
-                    COALESCE(SUM(r.refund_amount), 0) as total_refunds,
-                    COUNT(*) as total_returns
+                    COALESCE(SUM(ri.refund_amount), 0) as total_refunds,
+                    COUNT(DISTINCT r.id) as total_returns
                 ')
                 ->first();
 
             $totalRefunds = (float) ($returnsAgg->total_refunds ?? 0);
             $totalReturns = (int) ($returnsAgg->total_returns ?? 0);
 
-            // 6) Exchanges
+            // 6) Exchanges - EXCLUDES SUB-ORDERS
             $totalExchanges = (int) DB::table('exchanges as e')
+                ->join('orders as o', 'e.order_id', '=', 'o.id')
                 ->whereBetween('e.created_at', [$start, $end])
                 ->when($locationId, fn($q) => $q->where('e.location_id', $locationId))
+                ->tap(fn($q) => $this->applyValidOrders($q))
                 ->count();
 
-            // ✅ 6.5) Expenses (today by expense_date)
+            // ✅ 6.5) Expenses (today by expense_date) - Same for all orders
             $todayDate = $start->toDateString();
 
             $expensesAgg = DB::table('expenses as e')
@@ -295,8 +322,7 @@ class FinancialTodayDashboardController extends Controller
                     'count' => (int) $r->count,
                 ])->values();
 
-            // 7) COGS: net qty after returns
-            // Step 1: Retrieve the necessary data without unit conversion in the query
+            // 7) COGS: net qty after returns - EXCLUDES SUB-ORDERS
             $cogsQuery = DB::table('order_items as oi')
                 ->join('orders as o', 'oi.order_id', '=', 'o.id')
                 ->leftJoin('product_batches as pb', 'oi.product_batch_id', '=', 'pb.id')
@@ -304,25 +330,21 @@ class FinancialTodayDashboardController extends Controller
                 ->when($locationId, fn($q) => $q->where('o.location_id', $locationId))
                 ->tap(fn($q) => $this->applyValidOrders($q))
                 ->selectRaw('
-        oi.quantity, oi.returned_qty, pb.buy_price, oi.unit as sale_unit, pb.unit as batch_unit
-    ');
+                    oi.quantity, oi.returned_qty, pb.buy_price, oi.unit as sale_unit, pb.unit as batch_unit
+                ');
 
-            // Step 2: Calculate COGS in PHP by converting units
             $cogs = 0;
             $cogsQueryResults = $cogsQuery->get();
 
             foreach ($cogsQueryResults as $item) {
                 $quantity = max($item->quantity - $item->returned_qty, 0);
-                // Convert sale quantity to batch quantity
                 $convertedQty = CartUnit::toBatchQty($quantity, $item->sale_unit, $item->batch_unit);
                 $cogs += $convertedQty * $item->buy_price;
             }
 
-            // Now `$cogs` contains the total COGS value
             $cogsValue = (float) $cogs;
 
-
-            // ✅ Sold qty (net after returns)
+            // ✅ Sold qty (net after returns) - EXCLUDES SUB-ORDERS
             $soldQty = (float) (DB::table('order_items as oi')
                 ->join('orders as o', 'oi.order_id', '=', 'o.id')
                 ->whereBetween('o.created_at', [$start, $end])
@@ -333,10 +355,14 @@ class FinancialTodayDashboardController extends Controller
                 ')
                 ->value('sold_qty') ?? 0);
 
-            // ✅ 8) Net sales & profit (stronger)
-            // $netSales = $grossSales - $totalRefunds;
-
-
+            // ✅ 8) Net sales & profit (stronger) - EXCLUDES SUB-ORDERS
+            // $grossSales is already net of returns -- it's built from
+            // o.payable_total, which OrderController::refund()/updateOrderTotals()
+            // and the return wizard's recalcOrderTotals() both reduce to reflect
+            // returned_qty. Subtracting $totalRefunds again here would double-count
+            // the same return (that's what was making refunded periods show
+            // negative profit). $totalRefunds stays a separate, purely
+            // informational figure ("how much was refunded this period").
             $netSales = $grossSales;
 
             $grossProfit = $netSales - $cogsValue;
@@ -380,7 +406,7 @@ class FinancialTodayDashboardController extends Controller
                 ->whereRaw('(bs.on_hand - bs.reserved) < 10')
                 ->count();
 
-            // 11) Hourly sales chart
+            // 11) Hourly sales chart - EXCLUDES SUB-ORDERS
             $hourlySales = DB::table('orders as o')
                 ->whereBetween('o.created_at', [$start, $end])
                 ->when($locationId, fn($q) => $q->where('o.location_id', $locationId))
@@ -399,92 +425,96 @@ class FinancialTodayDashboardController extends Controller
                     'revenue' => (float) $r->revenue,
                 ]);
 
-            // 12) Status distribution
+            // 12) Status distribution - EXCLUDES SUB-ORDERS
             $statusDist = DB::table('orders as o')
                 ->whereBetween('o.created_at', [$start, $end])
                 ->when($locationId, fn($q) => $q->where('o.location_id', $locationId))
+                ->tap(fn($q) => $this->applyValidOrders($q))
                 ->selectRaw('o.status, COUNT(*) as count')
                 ->groupBy('o.status')
                 ->orderByDesc('count')
                 ->get();
 
-            // 13) Recent orders paginated ✅
+            // 13) Sub-orders count (for informational purposes)
+            $subOrdersCount = (int) DB::table('orders as o')
+                ->whereBetween('o.created_at', [$start, $end])
+                ->when($locationId, fn($q) => $q->where('o.location_id', $locationId))
+                ->where('o.is_split_child', true)
+                ->whereNotIn('o.status', ['cancelled', 'canceled', 'void'])
+                ->count();
+
+            $subOrdersTotal = (float) DB::table('orders as o')
+                ->whereBetween('o.created_at', [$start, $end])
+                ->when($locationId, fn($q) => $q->where('o.location_id', $locationId))
+                ->where('o.is_split_child', true)
+                ->whereNotIn('o.status', ['cancelled', 'canceled', 'void'])
+                ->sum('o.payable_total');
+
+            // 14) Recent orders paginated ✅
             $paginator = $this->recentOrdersPaginator($locationId, $page, self::RECENT_PER_PAGE);
             $recentOrders = $this->normalizePaginator($paginator);
-// 14) Top products (optional)
-$topProductIds = DB::table('order_items as oi')
-    ->join('orders as o', 'oi.order_id', '=', 'o.id')
-    ->whereBetween('o.created_at', [$start, $end])
-    ->when($locationId, fn($q) => $q->where('o.location_id', $locationId))
-    ->tap(fn($q) => $this->applyValidOrders($q))
-    ->select('oi.product_id')
-    ->selectRaw('COALESCE(SUM(oi.total_price), 0) as total_revenue')
-    ->groupBy('oi.product_id')
-    ->orderByDesc('total_revenue')
-    ->limit(10)
-    ->pluck('product_id');
 
-// Initialize the $topProducts collection
-$topProducts = collect();
+            // 15) Top products - EXCLUDES SUB-ORDERS
+            $topProductIds = DB::table('order_items as oi')
+                ->join('orders as o', 'oi.order_id', '=', 'o.id')
+                ->whereBetween('o.created_at', [$start, $end])
+                ->when($locationId, fn($q) => $q->where('o.location_id', $locationId))
+                ->tap(fn($q) => $this->applyValidOrders($q))
+                ->select('oi.product_id')
+                ->selectRaw('COALESCE(SUM(oi.total_price), 0) as total_revenue')
+                ->groupBy('oi.product_id')
+                ->orderByDesc('total_revenue')
+                ->limit(10)
+                ->pluck('product_id');
 
-if ($topProductIds->isNotEmpty()) {
-    // Fetch product details
-    $products = Product::whereIn('id', $topProductIds)
-        ->select(['id', 'name', 'category_id', 'brand_id'])
-        ->with(['category:id,name', 'brand:id,name'])
-        ->get()
-        ->keyBy('id');
+            $topProducts = collect();
 
-    // Now fetch the details for the top products and perform the required calculations
-$topProducts = DB::table('order_items as oi')
-    ->join('orders as o', 'oi.order_id', '=', 'o.id')
-    ->leftJoin('product_batches as pb', 'oi.product_batch_id', '=', 'pb.id')
-    ->whereBetween('o.created_at', [$start, $end])
-    ->when($locationId, fn($q) => $q->where('o.location_id', $locationId))
-    ->tap(fn($q) => $this->applyValidOrders($q))
-    ->whereIn('oi.product_id', $topProductIds)
-    ->select([
-        'oi.product_id',
-        DB::raw('COALESCE(SUM(GREATEST(COALESCE(oi.quantity,0)-COALESCE(oi.returned_qty,0),0)), 0) as total_qty'),
-        DB::raw('COALESCE(SUM(oi.total_price), 0) as total_revenue'),
-        'oi.unit as order_unit',
-        'pb.unit as batch_unit',
-        DB::raw('COALESCE(SUM(GREATEST(COALESCE(oi.quantity,0)-COALESCE(oi.returned_qty,0),0) * COALESCE(pb.buy_price,0)), 0) as total_cost')
-    ])
-    ->groupBy('oi.product_id', 'oi.unit', 'pb.unit')
-    ->get()
-    ->map(function ($i) use ($products) {
-        // Retrieve the product data
-        $product = $products->get($i->product_id);
+            if ($topProductIds->isNotEmpty()) {
+                $products = Product::whereIn('id', $topProductIds)
+                    ->select(['id', 'name', 'category_id', 'brand_id'])
+                    ->with(['category:id,name', 'brand:id,name'])
+                    ->get()
+                    ->keyBy('id');
 
-        // Convert quantity based on order and batch units
-        $convertedQty = CartUnit::toBatchQty($i->total_qty, $i->order_unit, $i->batch_unit);
+                $topProducts = DB::table('order_items as oi')
+                    ->join('orders as o', 'oi.order_id', '=', 'o.id')
+                    ->leftJoin('product_batches as pb', 'oi.product_batch_id', '=', 'pb.id')
+                    ->whereBetween('o.created_at', [$start, $end])
+                    ->when($locationId, fn($q) => $q->where('o.location_id', $locationId))
+                    ->tap(fn($q) => $this->applyValidOrders($q))
+                    ->whereIn('oi.product_id', $topProductIds)
+                    ->select([
+                        'oi.product_id',
+                        DB::raw('COALESCE(SUM(GREATEST(COALESCE(oi.quantity,0)-COALESCE(oi.returned_qty,0),0)), 0) as total_qty'),
+                        DB::raw('COALESCE(SUM(oi.total_price), 0) as total_revenue'),
+                        'oi.unit as order_unit',
+                        'pb.unit as batch_unit',
+                        DB::raw('COALESCE(SUM(GREATEST(COALESCE(oi.quantity,0)-COALESCE(oi.returned_qty,0),0) * COALESCE(pb.buy_price,0)), 0) as total_cost')
+                    ])
+                    ->groupBy('oi.product_id', 'oi.unit', 'pb.unit')
+                    ->get()
+                    ->map(function ($i) use ($products) {
+                        $product = $products->get($i->product_id);
+                        $convertedQty = CartUnit::toBatchQty($i->total_qty, $i->order_unit, $i->batch_unit);
+                        $rev = (float) $i->total_revenue;
+                        $updatedCost = (float) CartUnit::toBatchQty($i->total_cost, $i->order_unit, $i->batch_unit);
+                        $cost = (float) $updatedCost;
+                        $profit = $rev - $cost;
+                        $margin = $rev > 0 ? round(($profit / $rev) * 100, 2) : 0;
 
-        // Calculate total revenue, cost, and profit
-        $rev = (float) $i->total_revenue;
-        $updatedCost = (float) CartUnit::toBatchQty($i->total_cost, $i->order_unit, $i->batch_unit);
-        // $cost = (float) $i->total_cost; // This is already the total cost based on quantities
-        $cost = (float) $updatedCost;
-
-        // Calculate profit and margin
-        $profit = $rev - $cost;
-        $margin = $rev > 0 ? round(($profit / $rev) * 100, 2) : 0;
-
-        // Return the final processed data, including the converted quantity
-        return [
-            'product' => $product,
-            'total_qty' => (float) $i->total_qty,  // Use the converted quantity
-            'update_qty' => $convertedQty,
-            'total_revenue' => $rev,
-            'total_cost' => $cost, // Total cost calculated from query
-            'profit' => $profit,
-            'margin' => $margin,
-        ];
-    })
-    ->sortByDesc('total_revenue')
-    ->values();
-
-}
+                        return [
+                            'product' => $product,
+                            'total_qty' => (float) $i->total_qty,
+                            'update_qty' => $convertedQty,
+                            'total_revenue' => $rev,
+                            'total_cost' => $cost,
+                            'profit' => $profit,
+                            'margin' => $margin,
+                        ];
+                    })
+                    ->sortByDesc('total_revenue')
+                    ->values();
+            }
 
             $counters = $this->buildCounters($locationId);
 
@@ -546,6 +576,13 @@ $topProducts = DB::table('order_items as oi')
                     'recent_orders_paginated' => $recentOrders,
 
                     'top_products' => $topProducts,
+
+                    // ✅ Sub-orders info (for awareness - excluded from calculations)
+                    'sub_orders' => [
+                        'count' => $subOrdersCount,
+                        'total_amount' => $subOrdersTotal,
+                        'note' => 'Sub-orders are excluded from all financial calculations',
+                    ],
 
                     'period' => [
                         'from' => $start->toDateString(),
@@ -629,6 +666,10 @@ $topProducts = DB::table('order_items as oi')
                 $sinceTime = Carbon::parse($since);
                 $newOrders = DB::table('orders')
                     ->where('created_at', '>', $sinceTime)
+                    ->where(function($q) {
+                        $q->where('is_split_child', false)
+                          ->orWhereNull('is_split_child');
+                    })
                     ->when($locationId, fn($q) => $q->where('location_id', $locationId))
                     ->count();
             } catch (\Throwable $e) {
@@ -650,6 +691,12 @@ $topProducts = DB::table('order_items as oi')
         $locationId = $this->locationId($request);
 
         return response()->stream(function () use ($locationId) {
+            // This loop runs for up to 600 * 3s = 30 minutes, well past PHP's
+            // default 30s max_execution_time -- without lifting it here, the
+            // stream fatals out ("Maximum execution time... exceeded") a few
+            // seconds in on any server that doesn't already set it globally.
+            @set_time_limit(0);
+
             @ini_set('zlib.output_compression', '0');
             @ini_set('output_buffering', 'off');
             @ini_set('implicit_flush', '1');
@@ -668,6 +715,10 @@ $topProducts = DB::table('order_items as oi')
 
                 $newOrders = DB::table('orders')
                     ->where('created_at', '>', $lastCheck)
+                    ->where(function($q) {
+                        $q->where('is_split_child', false)
+                          ->orWhereNull('is_split_child');
+                    })
                     ->when($locationId, fn($q) => $q->where('location_id', $locationId))
                     ->count();
 
@@ -693,6 +744,48 @@ $topProducts = DB::table('order_items as oi')
             'Cache-Control'     => 'no-cache, no-store, must-revalidate',
             'Pragma'            => 'no-cache',
             'X-Accel-Buffering' => 'no',
+        ]);
+    }
+
+    /**
+     * Get sub-orders data separately (for informational purposes)
+     */
+    public function subOrdersData(Request $request): JsonResponse
+    {
+        $locationId = $this->locationId($request);
+        [$start, $end] = $this->todayRange();
+
+        $subOrders = DB::table('orders as o')
+            ->leftJoin('customers as c', 'o.customer_id', '=', 'c.id')
+            ->whereBetween('o.created_at', [$start, $end])
+            ->when($locationId, fn($q) => $q->where('o.location_id', $locationId))
+            ->where('o.is_split_child', true)
+            ->whereNotIn('o.status', ['cancelled', 'canceled', 'void'])
+            ->select([
+                'o.id',
+                'o.order_no',
+                'o.parent_order_id',
+                'o.created_at',
+                'o.payable_total',
+                'o.status',
+                DB::raw('COALESCE(c.name, "Guest") as customer_name'),
+            ])
+            ->orderByDesc('o.created_at')
+            ->get();
+
+        return response()->json([
+            'sub_orders' => $subOrders->map(fn($o) => [
+                'id' => $o->id,
+                'order_no' => $o->order_no,
+                'parent_order_id' => $o->parent_order_id,
+                'customer_name' => $o->customer_name ?? 'Guest',
+                'created_at' => $o->created_at,
+                'payable_total' => (float) $o->payable_total,
+                'status' => $o->status,
+            ]),
+            'total_count' => $subOrders->count(),
+            'total_amount' => (float) $subOrders->sum('payable_total'),
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 }

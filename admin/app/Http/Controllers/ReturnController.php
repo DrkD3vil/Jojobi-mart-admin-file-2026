@@ -10,16 +10,36 @@ use App\Models\ReturnItem;
 use App\Models\StockTransaction;
 use App\Models\StockTransactionLine;
 use App\Services\Inventory\InventoryService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ReturnController extends Controller
 {
+    /**
+     * The 'returns.create' route had no handler at all (a fatal error on
+     * every visit) -- the actual, working return flow lives entirely in
+     * ReturnWizardController. Redirect here instead of maintaining a
+     * second, parallel return form.
+     */
+    public function create(Request $request)
+    {
+        return redirect()->route('returns.wizard', $request->only(['order_id', 'customer_id']));
+    }
+
     public function store(StoreReturnRequest $request, InventoryService $inventory)
     {
         $data = $request->validated();
 
-        $idemKey = $request->header('X-Idempotency-Key') ?? (string) Str::uuid();
+        // The wizard posts a plain HTML form (no JS fetch), which can't set a
+        // custom header -- so 'X-Idempotency-Key' was never actually sent by
+        // the real UI, and this fell through to a fresh random uuid() on
+        // every request, making the "already processed" check below a no-op.
+        // A double-click or resubmit created a second return, refund, and
+        // stock-in for the same items. The wizard now renders a token into
+        // a hidden `idempotency_key` field once per page load, so a repeat
+        // submission reuses the same key here.
+        $idemKey = $data['idempotency_key'] ?? $request->header('X-Idempotency-Key') ?? (string) Str::uuid();
 
         $existing = ProductReturn::where('idempotency_key', $idemKey)->first();
         if ($existing) {
@@ -47,7 +67,7 @@ class ReturnController extends Controller
             $usedBatchIds = [];
 
             foreach ($data['items'] as $it) {
-                $orderItem = OrderItem::findOrFail($it['order_item_id']);
+                $orderItem = OrderItem::lockForUpdate()->findOrFail($it['order_item_id']);
 
                 // belong to same order
                 if ((int)$orderItem->order_id !== (int)$order->id) {
@@ -104,6 +124,23 @@ class ReturnController extends Controller
 
             $return->refund_amount = $refundTotal;
             $return->save();
+
+            $return->recordTimeline(
+                'received',
+                'Return Received',
+                currency_bdt($refundTotal) . " refunded via {$return->refund_method} for order #{$order->order_no}.",
+                null,
+                $return->status,
+                'undo-2'
+            );
+            $order->recordTimeline(
+                'return_received',
+                'Return Received',
+                currency_bdt($refundTotal) . " refunded ({$return->return_no}).",
+                null,
+                null,
+                'undo-2'
+            );
 
             // Stock tx RETURN_IN
             $tx = StockTransaction::create([
@@ -181,10 +218,32 @@ class ReturnController extends Controller
 
         $order->subtotal = $subtotal;
         $order->discount_total = $discountTotal;
-        $order->payable_total = max(0, $subtotal - $discountTotal);
+        $payable = max(0, $subtotal - $discountTotal);
+        $order->payable_total = $payable;
+
+        // A return shrinks payable_total, so what was already paid must be
+        // re-split into due/change against the new (smaller) payable amount
+        // -- otherwise the order keeps showing the pre-return due/paid figures.
+        $paidTotal = (float) \App\Models\Payment::where('order_id', $order->id)
+            ->where('status', 'captured')
+            ->sum('amount');
+
+        if ($paidTotal <= 0) {
+            $order->due_total = $payable;
+            $order->change_total = 0;
+            $order->payment_status = 'unpaid';
+        } elseif ($paidTotal < $payable) {
+            $order->due_total = $payable - $paidTotal;
+            $order->change_total = 0;
+            $order->payment_status = 'partial';
+        } else {
+            $order->due_total = 0;
+            $order->change_total = $paidTotal - $payable;
+            $order->payment_status = 'paid';
+        }
 
         $allReturned = $order->items->every(fn($it) => (float)($it->returned_qty ?? 0) >= (float)$it->quantity);
-        $order->status = $allReturned ? 'RETURNED' : ($order->status ?? 'COMPLETED');
+        $order->status = $allReturned ? 'returned' : ($order->status ?? 'completed');
 
         $order->save();
     }

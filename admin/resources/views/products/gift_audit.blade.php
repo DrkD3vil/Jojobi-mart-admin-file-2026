@@ -413,7 +413,7 @@
                                                     {{ $detail['is_active'] ? 'checked' : '' }}
                                                     onchange="toggleOfferStatus(this)">
                                                 <label for="toggle-{{ $detail['batch_id'] }}"
-                                                    class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                                                    class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer" style="background: var(--border);"></label>
                                             </div>
                                             <span
                                                 class="text-sm {{ $detail['is_active'] ? 'text-green-500' : 'text-red-500' }}">

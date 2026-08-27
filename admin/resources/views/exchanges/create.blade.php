@@ -180,6 +180,10 @@ html[data-theme='light'] .exc-theme::before{transform: translateX(28px);}
 
   <form method="POST" action="{{ route('exchanges.store') }}" id="excForm">
     @csrf
+    {{-- One token per page render, checked server-side in
+         ExchangeController::store() -- protects a double-click or browser
+         resubmit from posting the same exchange twice. --}}
+    <input type="hidden" name="idempotency_key" value="{{ $idempotencyKey }}">
 
     {{-- Header / Config --}}
     <div class="exc-card">
@@ -922,6 +926,13 @@ html[data-theme='light'] .exc-theme::before{transform: translateX(28px);}
         setHint(`Issue qty exceeds available for batch #${l.product_batch_id} (available ${av}).`, true);
         return;
       }
+    }
+
+    // Guard against a double-click/double-submit firing this twice before
+    // the page navigates away.
+    if(btnSubmit){
+      if(btnSubmit.disabled){ e.preventDefault(); return; }
+      btnSubmit.disabled = true;
     }
   });
 

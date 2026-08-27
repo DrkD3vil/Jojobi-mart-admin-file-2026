@@ -31,7 +31,7 @@
         </nav>
 
         <!-- Header Section -->
-        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 p-6 mb-8 shadow-[var(--card-shadow)]">
+        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 p-6 mb-8 shadow-[var(--card-shadow)]" data-reveal>
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div class="flex-1">
                     <div class="flex items-center gap-3 mb-3">
@@ -63,7 +63,7 @@
                         </div>
                         <div class="p-3 bg-[var(--bg-tertiary)] rounded-xl">
                             <p class="text-xs text-[var(--text-secondary)]">Last Updated</p>
-                            <p class="text-sm font-medium text-[var(--text-primary)]">{{ $role->updated_at->diffForHumans() }}</p>
+                            <p class="text-sm font-medium text-[var(--text-primary)]">{{ $role->updated_at?->diffForHumans() ?? '—' }}</p>
                         </div>
                         <div class="p-3 bg-[var(--bg-tertiary)] rounded-xl">
                             <p class="text-xs text-[var(--text-secondary)]">Status</p>
@@ -80,12 +80,22 @@
                 <div class="flex flex-col sm:flex-row gap-3">
                     <a href="{{ route('roles.edit', $role) }}"
                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg hover:shadow-xl"
-                       style="background: linear-gradient(135deg, var(--warning), var(--warning)/0.8); color: white;">
+                       style="background: linear-gradient(135deg, var(--warning), color-mix(in oklch, var(--warning) 80%, transparent)); color: var(--primary-foreground);">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
                         Edit Role
                     </a>
+                    <form action="{{ route('roles.clone', $role) }}" method="POST">
+                        @csrf
+                        <button type="submit"
+                           class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] hover:shadow-sm transition-all duration-300 w-full">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            Clone Role
+                        </button>
+                    </form>
                     <a href="{{ route('roles.index') }}"
                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] hover:shadow-sm transition-all duration-300 group">
                         <svg class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,7 +107,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" data-reveal>
             <!-- Role Details Card -->
             <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] lg:col-span-2">
                 <div class="border-b border-[var(--border-color)]/30 px-6 py-4 bg-gradient-to-r from-[var(--bg-tertiary)] to-[var(--bg-tertiary)]/50">
@@ -135,7 +145,7 @@
 
                             <div class="info-item">
                                 <label class="info-label">Last Updated</label>
-                                <p class="info-value">{{ $role->updated_at->format('F d, Y \a\t h:i A') }}</p>
+                                <p class="info-value">{{ $role->updated_at?->format('F d, Y \a\t h:i A') ?? '—' }}</p>
                             </div>
                         </div>
                     </div>
@@ -215,7 +225,7 @@
         </div>
 
         <!-- Permissions Section -->
-        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] mt-6">
+        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] mt-6" data-reveal>
             <div class="border-b border-[var(--border-color)]/30 px-6 py-4 bg-gradient-to-r from-[var(--bg-tertiary)] to-[var(--bg-tertiary)]/50">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <h2 class="text-xl font-semibold text-[var(--text-primary)] flex items-center gap-3">
@@ -318,6 +328,38 @@
                 @endif
             </div>
         </div>
+
+        <!-- Effective Access Keys -->
+        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] mt-6" data-reveal>
+            <div class="border-b border-[var(--border-color)]/30 px-6 py-4 bg-gradient-to-r from-[var(--bg-tertiary)] to-[var(--bg-tertiary)]/50">
+                <h2 class="text-xl font-semibold text-[var(--text-primary)] flex items-center gap-3">
+                    <svg class="w-5 h-5 text-[var(--accent-color)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                    Effective Access Keys
+                    <span class="px-3 py-1 text-sm font-medium bg-[var(--accent-color)]/10 text-[var(--accent-color)] rounded-full">
+                        {{ $effectiveAccessKeys->count() }} keys
+                    </span>
+                </h2>
+                <p class="text-sm text-[var(--text-secondary)] mt-1">What this role's members can actually reach — from an assigned privilege (auto), or a direct grant on the Access Keys page.</p>
+            </div>
+            <div class="p-6">
+                @if ($effectiveAccessKeys->isNotEmpty())
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($effectiveAccessKeys as $key)
+                            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-[var(--bg-tertiary)] border border-[var(--border-color)] text-[var(--text-primary)]">
+                                {{ $key->access_key }}
+                                <span class="text-xs px-2 py-0.5 rounded-full {{ $key->is_auto ? 'bg-[var(--accent-color)]/15 text-[var(--accent-color)]' : 'bg-[var(--warning)]/15 text-[var(--warning)]' }}">
+                                    {{ $key->is_auto ? 'via privilege' : 'direct grant' }}
+                                </span>
+                            </span>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-[var(--text-secondary)] text-sm">This role can't reach anything yet — assign a privilege above, or grant an access key directly from the <a href="{{ route('access_keys.index') }}" class="text-[var(--accent-color)] hover:underline">Access Keys</a> page.</p>
+                @endif
+            </div>
+        </div>
     </div>
 </div>
 
@@ -355,7 +397,11 @@
                             <svg class="w-4 h-4 text-[var(--danger)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
-                            Any users assigned this role will lose their permissions
+                            @if ($role->users->count() > 0)
+                                <span class="font-semibold">{{ $role->users->count() }} user{{ $role->users->count() !== 1 ? 's' : '' }}</span>&nbsp;will lose access this role granted
+                            @else
+                                No users currently hold this role
+                            @endif
                         </li>
                     </ul>
                 </div>
@@ -443,7 +489,7 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
         background: var(--glass-base);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--border-color);
     }
 
     /* Info Item Styles */
@@ -473,50 +519,50 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
         gap: 10px;
         width: 100%;
         padding: 12px 16px;
-        border-radius: 12px;
+        border-radius: var(--radius);
         font-weight: 500;
         font-size: 0.9rem;
-        transition: all 0.3s ease;
+        transition: all var(--transition-normal) ease;
         text-align: left;
     }
 
     .action-btn.edit-btn {
-        background: linear-gradient(to right, var(--warning)/10, transparent);
+        background: linear-gradient(to right, color-mix(in oklch, var(--warning) 10%, transparent), transparent);
         color: var(--warning);
-        border: 1px solid var(--warning)/20;
+        border: 1px solid color-mix(in oklch, var(--warning) 20%, transparent);
     }
 
     .action-btn.edit-btn:hover {
-        background: linear-gradient(to right, var(--warning)/20, transparent);
-        border-color: var(--warning)/40;
+        background: linear-gradient(to right, color-mix(in oklch, var(--warning) 20%, transparent), transparent);
+        border-color: color-mix(in oklch, var(--warning) 40%, transparent);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px var(--warning)/10;
+        box-shadow: 0 4px 12px color-mix(in oklch, var(--warning) 10%, transparent);
     }
 
     .action-btn.delete-btn {
-        background: linear-gradient(to right, var(--danger)/10, transparent);
+        background: linear-gradient(to right, color-mix(in oklch, var(--danger) 10%, transparent), transparent);
         color: var(--danger);
-        border: 1px solid var(--danger)/20;
+        border: 1px solid color-mix(in oklch, var(--danger) 20%, transparent);
     }
 
     .action-btn.delete-btn:hover {
-        background: linear-gradient(to right, var(--danger)/20, transparent);
-        border-color: var(--danger)/40;
+        background: linear-gradient(to right, color-mix(in oklch, var(--danger) 20%, transparent), transparent);
+        border-color: color-mix(in oklch, var(--danger) 40%, transparent);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px var(--danger)/10;
+        box-shadow: 0 4px 12px color-mix(in oklch, var(--danger) 10%, transparent);
     }
 
     .action-btn.create-btn {
-        background: linear-gradient(to right, var(--success)/10, transparent);
+        background: linear-gradient(to right, color-mix(in oklch, var(--success) 10%, transparent), transparent);
         color: var(--success);
-        border: 1px solid var(--success)/20;
+        border: 1px solid color-mix(in oklch, var(--success) 20%, transparent);
     }
 
     .action-btn.create-btn:hover {
-        background: linear-gradient(to right, var(--success)/20, transparent);
-        border-color: var(--success)/40;
+        background: linear-gradient(to right, color-mix(in oklch, var(--success) 20%, transparent), transparent);
+        border-color: color-mix(in oklch, var(--success) 40%, transparent);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px var(--success)/10;
+        box-shadow: 0 4px 12px color-mix(in oklch, var(--success) 10%, transparent);
     }
 
     .action-btn.outline-btn {
@@ -535,9 +581,9 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
     .permission-card {
         background: var(--bg-tertiary);
         border: 1px solid var(--border-color);
-        border-radius: 12px;
+        border-radius: var(--radius);
         padding: 16px;
-        transition: all 0.3s ease;
+        transition: all var(--transition-normal) ease;
     }
 
     .permission-card:hover {
@@ -556,8 +602,8 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
     .permission-icon {
         width: 32px;
         height: 32px;
-        background: var(--accent-color)/10;
-        border-radius: 8px;
+        background: color-mix(in oklch, var(--accent-color) 10%, transparent);
+        border-radius: calc(var(--radius) - 2px);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -605,11 +651,11 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
 
     /* Modal Animation */
     #deleteModal {
-        transition: opacity 0.3s ease;
+        transition: opacity var(--transition-normal) ease;
     }
 
     #modalContent {
-        transition: all 0.3s ease;
+        transition: all var(--transition-normal) ease;
     }
 
     /* Responsive */

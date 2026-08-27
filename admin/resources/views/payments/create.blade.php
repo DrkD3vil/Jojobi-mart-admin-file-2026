@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container py-3">
-  <div class="mb-3">
+  <div class="mb-3" data-reveal>
     <div class="text-muted">Payment</div>
     <h4 class="m-0">{{ $order->order_no }}</h4>
 
@@ -14,7 +14,7 @@
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" data-reveal>
     <div class="card-header d-flex justify-content-between align-items-center">
       <strong>Split Payments</strong>
       <button class="btn btn-sm btn-outline-primary" id="addRowBtn" type="button">+ Add</button>
@@ -160,6 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
   addRow(); // first
 
   saveBtn.addEventListener('click', async () => {
+    if (saveBtn.disabled) return; // guard against double-click/duplicate submit
+
     const payments = collect();
     if (!payments.length) return alert('Add at least one payment amount');
 
@@ -169,23 +171,40 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    const res = await fetch(`{{ route('payments.store', $order->id) }}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        payments,
-        payment_note: noteEl.value
-      })
-    });
+    saveBtn.disabled = true;
+    const originalLabel = saveBtn.textContent;
+    saveBtn.textContent = 'Saving...';
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.success) return alert(data.message || 'Failed');
+    try {
+      const res = await fetch(`{{ route('payments.store', $order->id) }}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          payments,
+          payment_note: noteEl.value
+        })
+      });
 
-    alert(`Saved! Status: ${data.order.payment_status}, Due: ${money(data.order.due_total)}, Change: ${money(data.order.change_total)}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        alert(data.message || 'Failed');
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalLabel;
+        return;
+      }
+
+      alert(`Saved! Status: ${data.order.payment_status}, Due: ${money(data.order.due_total)}, Change: ${money(data.order.change_total)}`);
+      // Leave saveBtn disabled -- the payment succeeded, so re-submitting
+      // the same payments would only be a duplicate.
+    } catch (e) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = originalLabel;
+      alert('An error occurred. Please try again.');
+    }
   });
 });
 </script>

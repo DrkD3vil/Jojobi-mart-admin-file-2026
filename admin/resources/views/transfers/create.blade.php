@@ -4,62 +4,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
 <style>
-/* ===========================
-   FIXED THEME COLORS (OKLCH)
-   =========================== */
-:root{
-  --radius: 0.625rem;
-  --transition-fast: 150ms;
-  --transition-normal: 250ms;
-
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --border: oklch(1 0 0 / 15%);
-  --input: oklch(1 0 0 / 15%);
-
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-
-  --success: oklch(0.696 0.17 162.48);
-  --warning: oklch(0.769 0.188 70.08);
-  --danger: oklch(0.704 0.191 22.216);
-
-  --card-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.25);
-  --card-shadow-hover: 0 6px 12px -1px rgb(0 0 0 / 0.35), 0 3px 6px -2px rgb(0 0 0 / 0.25);
-  --dropdown-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.3);
-
-  --accent-color: var(--sidebar-primary);
-  --accent-hover: oklch(0.488 0.243 264.376 / 0.85);
-  --accent-glow: oklch(0.488 0.243 264.376 / 0.22);
-}
-
-html[data-theme='light']{
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.12 0 0);
-  --card: oklch(1 0 0);
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.5 0 0);
-  --border: oklch(0.9 0 0);
-  --input: oklch(0.96 0 0);
-
-  --sidebar-primary: oklch(0.646 0.222 41.116);
-  --sidebar-primary-foreground: oklch(1 0 0);
-
-  --success: oklch(0.627 0.194 149.214);
-  --warning: oklch(0.769 0.188 70.08);
-  --danger: oklch(0.577 0.245 27.325);
-
-  --card-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.08);
-  --card-shadow-hover: 0 6px 12px -1px rgb(0 0 0 / 0.12), 0 3px 6px -2px rgb(0 0 0 / 0.08);
-  --dropdown-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-
-  --accent-color: var(--sidebar-primary);
-  --accent-hover: oklch(0.646 0.222 41.116 / 0.85);
-  --accent-glow: oklch(0.646 0.222 41.116 / 0.12);
-}
+/* Theme tokens (--radius, --background, --sidebar-primary, --success,
+   --card-shadow, --accent-color, etc.) come from the shared design system
+   loaded globally in layouts/app.blade.php — referenced below, not redefined. */
 
 /* layout */
 .stx-wrap{max-width:1100px; margin:0 auto; padding:18px; color:var(--foreground);}
@@ -143,10 +90,15 @@ html[data-theme='light'] .stx-theme::before{transform: translateX(28px);}
 .stx-ddR{font-weight:900; color:var(--accent-color);}
 
 .stx-danger{color:var(--danger); font-weight:800;}
+
+@media (max-width: 768px) {
+  .stx-top{flex-wrap:wrap;}
+  .stx-lineTop{flex-wrap:wrap;}
+}
 </style>
 
 <div class="stx-wrap">
-  <div class="stx-top">
+  <div class="stx-top" data-reveal>
     <div>
       <div class="stx-h"><i class="fas fa-right-left"></i> Stock Transfer</div>
       <div class="stx-sub">Search by Product Name / Product Barcode / Batch No / Batch SKU / Batch ID</div>
@@ -155,13 +107,13 @@ html[data-theme='light'] .stx-theme::before{transform: translateX(28px);}
   </div>
 
   @if(session('ok'))
-    <div class="stx-card" style="background:var(--success); color:white;">
+    <div class="stx-card" style="background:var(--success); color:var(--sidebar-primary-foreground);">
       <i class="fas fa-check-circle"></i> {{ session('ok') }}
     </div>
   @endif
 
   @if($errors->any())
-    <div class="stx-card" style="background:var(--danger); color:white;">
+    <div class="stx-card" style="background:var(--danger); color:var(--sidebar-primary-foreground);">
       <i class="fas fa-exclamation-triangle"></i>
       <div style="margin-top:6px;">
         <b>Errors:</b>
@@ -175,7 +127,7 @@ html[data-theme='light'] .stx-theme::before{transform: translateX(28px);}
   <form method="POST" action="{{ route('transfers.store') }}" id="stxForm">
     @csrf
 
-    <div class="stx-card">
+    <div class="stx-card" data-reveal>
       <div class="stx-row">
         <div class="stx-col">
           <label class="stx-label">From Location</label>
@@ -205,7 +157,7 @@ html[data-theme='light'] .stx-theme::before{transform: translateX(28px);}
       <div class="stx-mini" id="stxHint"></div>
     </div>
 
-    <div class="stx-card">
+    <div class="stx-card" data-reveal>
       <div class="stx-lineTop">
         <div>
           <b style="font-size:1.05rem;"><i class="fas fa-list"></i> Transfer Lines</b>

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Report;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Report\Concerns\ReportFilters;
 use App\Models\Location;
 use App\Models\Product;
+use App\Services\Report\TabularExporter;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -14,10 +16,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FinancialDashboardController extends Controller
 {
+    use ReportFilters;
+
     /**
      * NOTE: Cache TTL integers are in SECONDS in Laravel.
      */
-    private const CACHE_VERSION = 'v6_profit_returns_exchanges_costdelta';
+    private const CACHE_VERSION = 'v8_returns_scoped_to_order_period';
 
     // Tuned TTLs (seconds)
     private const METRICS_TTL = 15;
@@ -31,33 +35,6 @@ class FinancialDashboardController extends Controller
     /* =========================
      | DATE RANGE + FILTERS
      ========================= */
-    private function resolveDateRange(string $range, ?string $startDate, ?string $endDate): array
-    {
-        static $cache = [];
-        $key = "{$range}_{$startDate}_{$endDate}";
-        if (isset($cache[$key])) return $cache[$key];
-
-        $now = Carbon::now();
-
-        $result = match ($range) {
-            'today'      => [$now->copy()->startOfDay(), $now->copy()->endOfDay()],
-            'yesterday'  => [$now->copy()->subDay()->startOfDay(), $now->copy()->subDay()->endOfDay()],
-            'this_week'  => [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()],
-            'last_week'  => [$now->copy()->subWeek()->startOfWeek(), $now->copy()->subWeek()->endOfWeek()],
-            'this_month' => [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()],
-            'last_month' => [$now->copy()->subMonth()->startOfMonth(), $now->copy()->subMonth()->endOfMonth()],
-            'this_year'  => [$now->copy()->startOfYear(), $now->copy()->endOfYear()],
-            'last_year'  => [$now->copy()->subYear()->startOfYear(), $now->copy()->subYear()->endOfYear()],
-            'custom'     => [
-                Carbon::parse($startDate)->startOfDay(),
-                Carbon::parse($endDate)->endOfDay()
-            ],
-            default => [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()],
-        };
-
-        return $cache[$key] = $result;
-    }
-
     private function filters(Request $request): array
     {
         $range = (string) $request->get('date_range', 'this_month');
@@ -125,8 +102,13 @@ class FinancialDashboardController extends Controller
     private function orderFilters($q, array $f)
     {
         return $q
+            ->tap(fn ($qq) => $this->excludeSplitChildren($qq))
             ->when($f['location_id'], fn ($qq) => $qq->where('o.location_id', $f['location_id']))
-            ->when($f['status'] !== 'all', fn ($qq) => $qq->where('o.status', $f['status']))
+            ->when(
+                $f['status'] !== 'all',
+                fn ($qq) => $qq->where('o.status', $f['status']),
+                fn ($qq) => $this->excludeInvalidStatuses($qq)
+            )
             ->when($f['payment_status'] !== 'all', fn ($qq) => $qq->where('o.payment_status', $f['payment_status']));
     }
 
@@ -245,7 +227,7 @@ class FinancialDashboardController extends Controller
                 // Payment methods breakdown
                 fn () => DB::table('payments as p')
                     ->join('orders as o', 'p.order_id', '=', 'o.id')
-                    ->where('p.status', 'completed')
+                    ->where('p.status', 'captured')
                     ->whereBetween('p.created_at', [$f['start'], $f['end']])
                     ->tap(fn ($q) => $this->orderFilters($q, $f))
                     ->groupBy('p.method')
@@ -261,12 +243,18 @@ class FinancialDashboardController extends Controller
                     ])->values(),
 
                 // ✅ Returns pack: refund + returned COGS + returned qty
+                // Scoped by the ORIGINAL ORDER's date/location (like every
+                // other figure here), not the return's own -- otherwise a
+                // return processed in a different period/location than the
+                // sale it belongs to silently drags down the wrong period's
+                // or the wrong location's profit instead of its own.
                 fn () => (function () use ($f) {
                     $q = DB::table('returns as r')
                         ->join('return_items as ri', 'ri.return_id', '=', 'r.id')
+                        ->join('orders as o', 'r.order_id', '=', 'o.id')
                         ->leftJoin('product_batches as pb', 'ri.product_batch_id', '=', 'pb.id')
-                        ->whereBetween('r.created_at', [$f['start'], $f['end']])
-                        ->when($f['location_id'], fn ($qq) => $qq->where('r.location_id', $f['location_id']));
+                        ->whereBetween('o.created_at', [$f['start'], $f['end']])
+                        ->when($f['location_id'], fn ($qq) => $qq->where('o.location_id', $f['location_id']));
 
                     $row = $q->selectRaw('
                             COALESCE(SUM(ri.refund_amount),0) as total_refunds,
@@ -285,17 +273,22 @@ class FinancialDashboardController extends Controller
                 })(),
 
                 // ✅ Exchange pack: revenue diff + cost delta + qty delta
+                // Scoped by the ORIGINAL ORDER's date/location -- same reason
+                // as the returns pack above (an exchange's own timestamp/
+                // location can differ from the sale it belongs to).
                 fn () => (function () use ($f) {
                     // revenue diff (positive = extra collected, negative = refunded)
                     $exRev = (float) (DB::table('exchanges as e')
-                        ->whereBetween('e.created_at', [$f['start'], $f['end']])
-                        ->when($f['location_id'], fn ($q) => $q->where('e.location_id', $f['location_id']))
+                        ->join('orders as o', 'e.order_id', '=', 'o.id')
+                        ->whereBetween('o.created_at', [$f['start'], $f['end']])
+                        ->when($f['location_id'], fn ($q) => $q->where('o.location_id', $f['location_id']))
                         ->selectRaw('COALESCE(SUM(e.price_difference),0) as rev')
                         ->value('rev') ?? 0);
 
                     $exCount = (int) (DB::table('exchanges as e')
-                        ->whereBetween('e.created_at', [$f['start'], $f['end']])
-                        ->when($f['location_id'], fn ($q) => $q->where('e.location_id', $f['location_id']))
+                        ->join('orders as o', 'e.order_id', '=', 'o.id')
+                        ->whereBetween('o.created_at', [$f['start'], $f['end']])
+                        ->when($f['location_id'], fn ($q) => $q->where('o.location_id', $f['location_id']))
                         ->count());
 
                     // cost delta: issued_cost - returned_cost
@@ -304,10 +297,11 @@ class FinancialDashboardController extends Controller
                     $mIssue  = "('issue','issued','out','outbound')";
 
                     $row = DB::table('exchanges as e')
+                        ->join('orders as o', 'e.order_id', '=', 'o.id')
                         ->join('exchange_lines as el', 'el.exchange_id', '=', 'e.id')
                         ->leftJoin('product_batches as pb', 'el.product_batch_id', '=', 'pb.id')
-                        ->whereBetween('e.created_at', [$f['start'], $f['end']])
-                        ->when($f['location_id'], fn ($q) => $q->where('e.location_id', $f['location_id']))
+                        ->whereBetween('o.created_at', [$f['start'], $f['end']])
+                        ->when($f['location_id'], fn ($q) => $q->where('o.location_id', $f['location_id']))
                         ->selectRaw("
                             COALESCE(SUM(CASE WHEN LOWER(el.mode) IN {$mReturn} THEN COALESCE(el.qty,0) ELSE 0 END),0) as returned_qty,
                             COALESCE(SUM(CASE WHEN LOWER(el.mode) IN {$mIssue}  THEN COALESCE(el.qty,0) ELSE 0 END),0) as issued_qty,
@@ -333,7 +327,7 @@ class FinancialDashboardController extends Controller
                 // ✅ Base COGS from orders (full qty, not net)
                 fn () => (float) (DB::table('order_items as oi')
                     ->join('orders as o', 'oi.order_id', '=', 'o.id')
-                    ->join('product_batches as pb', 'oi.product_batch_id', '=', 'pb.id')
+                    ->leftJoin('product_batches as pb', 'oi.product_batch_id', '=', 'pb.id')
                     ->whereBetween('o.created_at', [$f['start'], $f['end']])
                     ->tap(fn ($q) => $this->orderFilters($q, $f))
                     ->selectRaw('
@@ -448,9 +442,15 @@ class FinancialDashboardController extends Controller
         $exReturnedQty = (float) ($exchangePack['returned_qty'] ?? 0);
         $exIssuedQty   = (float) ($exchangePack['issued_qty'] ?? 0);
 
-        // ✅ Revenue (orders) - refunds + exchange difference
+        // ✅ Revenue (orders) + exchange difference
+        // $totalSales is already net of returns -- it's SUM(o.payable_total),
+        // and payable_total is reduced by returned_qty at the source (both
+        // OrderController::refund()/updateOrderTotals() and the return
+        // wizard's recalcOrderTotals() do this). Subtracting $totalRefunds
+        // again here double-counts the same return and was making refunded
+        // periods show negative profit. $totalRefunds is kept as a separate,
+        // purely informational figure elsewhere in this payload.
         $netSales = $totalSales + $exchangeRevenue;
-        // $netSales = $totalSales - $totalRefunds + $exchangeRevenue;
 
         // ✅ COGS: base order cogs - returned_cogs + exchange cost delta
         $cogsValue = (float) $baseCogs - $returnedCogs + $exchangeCogsDelta;
@@ -578,6 +578,7 @@ class FinancialDashboardController extends Controller
 
         $statusDist = DB::table('orders as o')
             ->whereBetween('o.created_at', [$f['start'], $f['end']])
+            ->tap(fn ($q) => $this->excludeSplitChildren($q))
             ->when($f['location_id'], fn ($q) => $q->where('o.location_id', $f['location_id']))
             ->when($f['payment_status'] !== 'all', fn ($q) => $q->where('o.payment_status', $f['payment_status']))
             ->selectRaw('o.status, COUNT(*) as count')
@@ -626,18 +627,22 @@ class FinancialDashboardController extends Controller
             ->keyBy('date')
             ->map(fn ($r) => (float) $r->revenue);
 
-        // ✅ Returns daily: refund + returned_cogs
+        // ✅ Returns daily: refund + returned_cogs -- attributed to the day
+        // the underlying order was created, not the day the return itself
+        // was processed, so a return lands on the same day as the sale it
+        // reverses instead of leaking into whatever day it happened to be filed.
         $retDaily = DB::table('returns as r')
             ->join('return_items as ri', 'ri.return_id', '=', 'r.id')
+            ->join('orders as o', 'r.order_id', '=', 'o.id')
             ->leftJoin('product_batches as pb', 'ri.product_batch_id', '=', 'pb.id')
-            ->whereBetween('r.created_at', [$f['start'], $f['end']])
-            ->when($f['location_id'], fn ($q) => $q->where('r.location_id', $f['location_id']))
+            ->whereBetween('o.created_at', [$f['start'], $f['end']])
+            ->when($f['location_id'], fn ($q) => $q->where('o.location_id', $f['location_id']))
             ->selectRaw('
-                DATE(r.created_at) as date,
+                DATE(o.created_at) as date,
                 COALESCE(SUM(ri.refund_amount),0) as refunds,
                 COALESCE(SUM(ri.qty * COALESCE(pb.buy_price,0)),0) as returned_cogs
             ')
-            ->groupBy(DB::raw('DATE(r.created_at)'))
+            ->groupBy(DB::raw('DATE(o.created_at)'))
             ->get()
             ->keyBy('date');
 
@@ -647,7 +652,7 @@ class FinancialDashboardController extends Controller
         // ✅ Orders COGS daily (full qty)
         $cogsMap = DB::table('order_items as oi')
             ->join('orders as o', 'oi.order_id', '=', 'o.id')
-            ->join('product_batches as pb', 'oi.product_batch_id', '=', 'pb.id')
+            ->leftJoin('product_batches as pb', 'oi.product_batch_id', '=', 'pb.id')
             ->whereBetween('o.created_at', [$f['start'], $f['end']])
             ->tap(fn ($q) => $this->orderFilters($q, $f))
             ->selectRaw('
@@ -664,19 +669,20 @@ class FinancialDashboardController extends Controller
         $mIssue  = "('issue','issued','out','outbound')";
 
         $exDaily = DB::table('exchanges as e')
+            ->join('orders as o', 'e.order_id', '=', 'o.id')
             ->leftJoin('exchange_lines as el', 'el.exchange_id', '=', 'e.id')
             ->leftJoin('product_batches as pb', 'el.product_batch_id', '=', 'pb.id')
-            ->whereBetween('e.created_at', [$f['start'], $f['end']])
-            ->when($f['location_id'], fn ($q) => $q->where('e.location_id', $f['location_id']))
+            ->whereBetween('o.created_at', [$f['start'], $f['end']])
+            ->when($f['location_id'], fn ($q) => $q->where('o.location_id', $f['location_id']))
             ->selectRaw("
-                DATE(e.created_at) as date,
+                DATE(o.created_at) as date,
                 COALESCE(SUM(e.price_difference),0) as ex_rev,
                 COALESCE(SUM(CASE WHEN LOWER(el.mode) IN {$mIssue}  THEN COALESCE(el.qty,0) * COALESCE(pb.buy_price,0) ELSE 0 END),0)
                   -
                 COALESCE(SUM(CASE WHEN LOWER(el.mode) IN {$mReturn} THEN COALESCE(el.qty,0) * COALESCE(pb.buy_price,0) ELSE 0 END),0)
                 as ex_cogs_delta
             ")
-            ->groupBy(DB::raw('DATE(e.created_at)'))
+            ->groupBy(DB::raw('DATE(o.created_at)'))
             ->get()
             ->keyBy('date');
 
@@ -706,7 +712,9 @@ class FinancialDashboardController extends Controller
             $exRev = (float) ($exRevMap[$d] ?? 0);
             $exCogsDelta = (float) ($exCogsDeltaMap[$d] ?? 0);
 
-            $netSales = $rev - $refund + $exRev;
+            // $rev ($o.payable_total) is already net of returns -- see the
+            // matching note in buildMetrics(). Don't subtract $refund again.
+            $netSales = $rev + $exRev;
             $netCogs = $orderCogs - $retCogs + $exCogsDelta;
 
             $grossProfit = $netSales - $netCogs;
@@ -802,7 +810,7 @@ class FinancialDashboardController extends Controller
 
             $topProducts = DB::table('order_items as oi')
                 ->join('orders as o', 'oi.order_id', '=', 'o.id')
-                ->join('product_batches as pb', 'oi.product_batch_id', '=', 'pb.id')
+                ->leftJoin('product_batches as pb', 'oi.product_batch_id', '=', 'pb.id')
                 ->whereBetween('o.created_at', [$f['start'], $f['end']])
                 ->tap(fn ($q) => $this->orderFilters($q, $f))
                 ->whereIn('oi.product_id', $topProductIds)
@@ -936,6 +944,12 @@ class FinancialDashboardController extends Controller
         $locationId = $request->filled('location_id') ? (int) $request->get('location_id') : null;
 
         return response()->stream(function () use ($locationId) {
+            // This loop runs for up to 600 * 3s = 30 minutes, well past PHP's
+            // default 30s max_execution_time -- without lifting it here, the
+            // stream fatals out ("Maximum execution time... exceeded") a few
+            // seconds in on any server that doesn't already set it globally.
+            @set_time_limit(0);
+
             @ini_set('zlib.output_compression', '0');
             @ini_set('output_buffering', 'off');
             @ini_set('implicit_flush', '1');
@@ -981,13 +995,13 @@ class FinancialDashboardController extends Controller
     }
 
     /* =========================
-     | EXPORT (same behavior)
+     | EXPORT
      ========================= */
-    public function export(Request $request): JsonResponse
+    public function export(Request $request)
     {
         $validated = $request->validate([
-            'format' => 'nullable|in:csv,excel,pdf',
-            'date_range' => 'required|string',
+            'format' => 'nullable|in:csv,xlsx,pdf',
+            'date_range' => 'nullable|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
             'location_id' => 'nullable|integer|exists:locations,id',
@@ -995,11 +1009,73 @@ class FinancialDashboardController extends Controller
             'payment_status' => 'nullable|string',
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Export has been queued. You will receive a notification when ready.',
-            'job_id' => uniqid('export_'),
-            'timestamp' => now()->toIso8601String(),
-        ]);
+        $format = $validated['format'] ?? 'csv';
+        $f = $this->filters($request);
+        $base = $this->cacheKeyBase($f);
+
+        $metrics = $this->buildMetrics($f, $base);
+        $tables = $this->buildTables($f);
+
+        $money = fn ($v) => currency_bdt($v);
+
+        $metricRows = [
+            ['Period', $metrics['period']['from'] . ' to ' . $metrics['period']['to']],
+            ['Total Orders', $metrics['total_orders']],
+            ['Total Sales', $money($metrics['total_sales'])],
+            ['Total Refunds', $money($metrics['total_refunds'])],
+            ['Net Sales', $money($metrics['net_sales'])],
+            ['Cost of Goods Sold', $money($metrics['cost_of_goods_sold'])],
+            ['Gross Profit', $money($metrics['gross_profit'])],
+            ['Gross Margin', number_format($metrics['gross_margin'], 2) . '%'],
+            ['Expenses', $money($metrics['expenses_total'])],
+            ['Net Profit', $money($metrics['net_profit'])],
+            ['Profit Margin', number_format($metrics['profit_margin'], 2) . '%'],
+            ['Avg Order Value', $money($metrics['avg_order_value'])],
+            ['Due Amount', $money($metrics['due_amount'])],
+            ['New Customers', $metrics['new_customers']],
+            ['Available Stock', $metrics['available_stock']],
+            ['Stock Cost Value', $money($metrics['stock_cost_value'])],
+            ['Low Stock Items', $metrics['low_stock_items']],
+        ];
+
+        $productRows = collect($tables['top_products'])->map(fn ($p) => [
+            $p['product']['name'] ?? 'Unknown',
+            $p['total_qty'],
+            $money($p['total_revenue']),
+            $money($p['total_cost']),
+            $money($p['profit']),
+            number_format($p['margin'], 2) . '%',
+        ])->all();
+
+        $orderRows = collect($tables['recent_orders'])->map(fn ($o) => [
+            $o['order_no'],
+            $o['customer']['name'] ?? 'Guest',
+            $o['created_at'],
+            $money($o['payable_total']),
+            $o['status'],
+            $o['payment_status'],
+        ])->all();
+
+        $sections = [
+            [
+                'heading' => 'Summary Metrics',
+                'columns' => ['Metric', 'Value'],
+                'rows' => $metricRows,
+            ],
+            [
+                'heading' => 'Top Products',
+                'columns' => ['Product', 'Qty', 'Revenue', 'Cost', 'Profit', 'Margin'],
+                'rows' => $productRows,
+            ],
+            [
+                'heading' => 'Recent Orders',
+                'columns' => ['Order No', 'Customer', 'Date', 'Total', 'Status', 'Payment Status'],
+                'rows' => $orderRows,
+            ],
+        ];
+
+        $filename = 'financial_analysis_' . $f['start']->format('Ymd') . '_' . $f['end']->format('Ymd');
+
+        return TabularExporter::respond($format, $filename, 'Financial Analysis Report', $sections);
     }
 }

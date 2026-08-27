@@ -1,0 +1,10 @@
+._*
+.DS_Store
+*.zip
+*.sql
+.env
+new_connection
+*.pem
+id_rsa*
+id_ed25519*
+id_ecdsa*

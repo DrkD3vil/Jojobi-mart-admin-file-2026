@@ -72,13 +72,30 @@ class PaymentController extends Controller
 
             $order = Order::where('id', $order->id)->lockForUpdate()->firstOrFail();
 
-            // validate order status
-            if ($order->status === 'void') {
-                return response()->json(['success' => false, 'message' => 'Order is void'], 422);
+            // Only orders that are still open and awaiting payment can take one.
+            // 'void' was never a real order status (the status column's enum
+            // never included it), so this check previously never fired.
+            if (!in_array($order->status, ['pending', 'processing'])) {
+                return response()->json(['success' => false, 'message' => 'Order is not in a payable state (status: ' . $order->status . ').'], 422);
             }
             if ((float)$order->payable_total <= 0) {
                 return response()->json(['success' => false, 'message' => 'Invalid payable total'], 422);
             }
+
+            $alreadyPaid = (float) Payment::where('order_id', $order->id)
+                ->where('status', 'captured')
+                ->sum('amount');
+            $payable = (float) $order->payable_total;
+
+            // Guard against a double-click/duplicate submit: once the order is
+            // already fully settled, don't silently accept more money against it.
+            if ($alreadyPaid >= $payable) {
+                return response()->json(['success' => false, 'message' => 'Order is already fully paid.'], 422);
+            }
+
+            $remaining = $payable - $alreadyPaid;
+            $requestedTotal = 0.0;
+            $hasNonCash = false;
 
             // validate methods + online trx_id
             foreach ($data['payments'] as $p) {
@@ -99,11 +116,25 @@ class PaymentController extends Controller
                         'message' => "Trx ID required for online payment ({$method})"
                     ], 422);
                 }
+
+                $requestedTotal += (float) $p['amount'];
+                if ($method !== 'cash') {
+                    $hasNonCash = true;
+                }
+            }
+
+            // Only cash is allowed to overpay (real-world "give change" case);
+            // any other method overshooting the remaining balance is rejected.
+            if ($hasNonCash && $requestedTotal > $remaining + 0.0001) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment amount exceeds the remaining balance due (' . number_format($remaining, 2) . '). Only cash payments may include change.'
+                ], 422);
             }
 
             // save payments
             foreach ($data['payments'] as $p) {
-                Payment::create([
+                $payment = Payment::create([
                     'order_id' => $order->id,
                     'channel' => $p['channel'],
                     'method' => $p['method'],
@@ -113,6 +144,15 @@ class PaymentController extends Controller
                     'status' => 'captured',
                     'meta' => null,
                 ]);
+
+                $payment->recordTimeline(
+                    'captured',
+                    'Payment Captured',
+                    currency_bdt($payment->amount) . " via {$payment->method} for order #{$order->order_no}.",
+                    null,
+                    'captured',
+                    'credit-card'
+                );
             }
 
             // recalc totals from DB
@@ -143,7 +183,19 @@ class PaymentController extends Controller
             $order->change_total = $change;
             $order->payment_status = $paymentStatus;
             $order->payment_note = $data['payment_note'] ?? null;
+            if ($paymentStatus === 'paid') {
+                $order->status = 'completed';
+            }
             $order->save();
+
+            $order->recordTimeline(
+                'payment_received',
+                'Payment Received',
+                currency_bdt($requestedTotal) . " received — order is now {$paymentStatus}.",
+                null,
+                $paymentStatus,
+                'credit-card'
+            );
 
             return response()->json([
                 'success' => true,

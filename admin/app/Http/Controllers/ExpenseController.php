@@ -47,10 +47,29 @@ class ExpenseController extends Controller
         if (!in_array($dir, ['asc','desc'])) $dir = 'desc';
         $q->orderBy($sort, $dir)->orderBy('id', 'desc');
 
-        $expenses = $q->paginate(20)->appends($request->query());
+        // Totals (for the full filtered result, not just the current page) --
+        // must be cloned and summed BEFORE paginate() runs. paginate() mutates
+        // $q's underlying query builder in place with LIMIT/OFFSET, and a later
+        // clone inherits that OFFSET; on any page beyond the first, the single
+        // aggregate row falls outside the OFFSET window and sum() silently
+        // returns 0 instead of the real total (verified against the live DB
+        // query builder). Category breakdown must also come from the full
+        // filtered set, not just the ~20 rows on the current page.
+        $filteredTotal = (clone $q)->toBase()->reorder()->sum('amount');
 
-        // Totals (for filtered result)
-        $filteredTotal = (clone $q)->toBase()->sum('amount');
+        // reorder() clears the expense_date/id ordering inherited from $q --
+        // left uncleared, `id` becomes ambiguous the moment expense_categories
+        // (which also has an `id` column) gets joined in below, and the whole
+        // page 500s.
+        $categoryTotals = (clone $q)->toBase()
+            ->reorder()
+            ->leftJoin('expense_categories', 'expense_categories.id', '=', 'expenses.expense_category_id')
+            ->selectRaw("COALESCE(expense_categories.name, 'Uncategorized') as cat_name, SUM(expenses.amount) as total")
+            ->groupBy('cat_name')
+            ->orderByDesc('total')
+            ->pluck('total', 'cat_name');
+
+        $expenses = $q->paginate(20)->appends($request->query());
 
         // Chart data: monthly sum for current year (or filtered date range if provided)
         $from = $request->filled('date_from') ? Carbon::parse($request->date_from) : Carbon::now()->startOfYear();
@@ -77,7 +96,7 @@ class ExpenseController extends Controller
 
         return view('expenses.index', compact(
             'expenses','filteredTotal','categories','locations','paymentMethods',
-            'chartLabels','chartValues'
+            'chartLabels','chartValues','categoryTotals'
         ));
     }
 
@@ -91,15 +110,31 @@ class ExpenseController extends Controller
     public function store(ExpenseStoreRequest $request)
     {
         $data = $request->validated();
-
-        $data['expense_no'] = $this->generateExpenseNo();
         $data['created_by'] = auth()->id();
 
         if ($request->hasFile('receipt_image')) {
             $data['receipt_image'] = $request->file('receipt_image')->store('expenses/receipts', 'public');
         }
 
-        Expense::create($data);
+        // generateExpenseNo() reads the last-used number outside any lock, so
+        // two concurrent submissions can compute the same next number and
+        // collide on the expense_no unique constraint. Retry with a freshly
+        // generated number instead of letting that surface as a raw 500.
+        $attempts = 0;
+        do {
+            $data['expense_no'] = $this->generateExpenseNo();
+            try {
+                $expense = Expense::create($data);
+                break;
+            } catch (\Illuminate\Database\QueryException $e) {
+                $attempts++;
+                if ($attempts >= 5 || !str_contains($e->getMessage(), 'expense_no')) {
+                    throw $e;
+                }
+            }
+        } while ($attempts < 5);
+
+        $expense->recordTimeline('created', 'Expense Recorded', currency_bdt($expense->amount) . " — {$expense->title}.", null, null, 'wallet');
 
         return redirect()->route('expenses.index')->with('success', 'Expense created.');
     }
@@ -126,13 +161,26 @@ class ExpenseController extends Controller
         }
 
         unset($data['remove_receipt']);
+        $oldAmount = (float) $expense->amount;
         $expense->update($data);
+
+        if ($expense->wasChanged('amount')) {
+            $expense->recordTimeline(
+                'updated',
+                'Expense Amount Updated',
+                "Changed from " . currency_bdt($oldAmount) . ' to ' . currency_bdt($expense->amount) . '.',
+                currency_bdt($oldAmount),
+                currency_bdt($expense->amount),
+                'pencil'
+            );
+        }
 
         return redirect()->route('expenses.index')->with('success', 'Expense updated.');
     }
 
     public function destroy(Expense $expense)
     {
+        $expense->recordTimeline('deleted', 'Expense Moved to Trash', null, null, null, 'trash-2');
         $expense->delete();
         return back()->with('success', 'Expense moved to trash.');
     }
@@ -148,6 +196,7 @@ class ExpenseController extends Controller
     {
         $e = Expense::onlyTrashed()->findOrFail($id);
         $e->restore();
+        $e->recordTimeline('restored', 'Expense Restored from Trash', null, null, null, 'undo-2');
         return back()->with('success', 'Expense restored.');
     }
 

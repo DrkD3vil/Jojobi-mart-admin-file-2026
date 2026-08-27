@@ -64,7 +64,7 @@
         @endif
 
         <!-- Form Container -->
-        <div style="
+        <div data-reveal style="
             background-color: var(--card);
             border-radius: calc(var(--radius) + 0.25rem);
             padding: 2rem;
@@ -330,7 +330,7 @@
         </div>
 
         <!-- Security Tips -->
-        <div style="
+        <div data-reveal style="
             margin-top: 2rem;
             padding: 1.25rem;
             background-color: var(--accent);

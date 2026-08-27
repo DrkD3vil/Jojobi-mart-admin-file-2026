@@ -31,7 +31,11 @@ class ExchangeController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('exchanges.create', compact('orders', 'locations'));
+        // One token per page render, submitted back as a hidden field and
+        // checked in store() -- see the idempotency comment there.
+        $idempotencyKey = (string) Str::uuid();
+
+        return view('exchanges.create', compact('orders', 'locations', 'idempotencyKey'));
     }
 
     /**
@@ -41,7 +45,14 @@ class ExchangeController extends Controller
     public function store(StoreExchangeRequest $request, InventoryService $inventory)
     {
         $data = $request->validated();
-        $idemKey = $request->header('X-Idempotency-Key') ?: (string) Str::uuid();
+
+        // exchanges/create.blade.php posts a plain HTML form, which can't set a
+        // custom HTTP header -- so the 'X-Idempotency-Key' header was never
+        // actually sent, and this always fell through to a brand-new random
+        // uuid(), making the "already processed" check below a no-op. The
+        // form now carries a per-page-load token in a hidden `idempotency_key`
+        // field, so a double-click/resubmit reuses the same key here.
+        $idemKey = $data['idempotency_key'] ?? ($request->header('X-Idempotency-Key') ?: (string) Str::uuid());
 
         // ✅ idempotent check (outside transaction)
         $existing = Exchange::query()->where('idempotency_key', $idemKey)->first();
@@ -223,6 +234,13 @@ class ExchangeController extends Controller
             $exchange->status = 'POSTED';
             $exchange->save();
 
+            $diffLabel = $diff > 0
+                ? currency_bdt($diff) . ' extra collected'
+                : ($diff < 0 ? currency_bdt(abs($diff)) . ' refunded' : 'no price difference');
+
+            $exchange->recordTimeline('posted', 'Exchange Posted', "Exchange {$exchange->exchange_no} posted — {$diffLabel}.", 'DRAFT', 'POSTED', 'refresh-cw');
+            $order->recordTimeline('exchange_posted', 'Exchange Posted', "Exchange {$exchange->exchange_no} — {$diffLabel}.", null, null, 'refresh-cw');
+
             return redirect()->back()->with('ok', "Exchange posted: {$exchange->exchange_no}, diff={$diff}");
         });
     }
@@ -328,8 +346,14 @@ class ExchangeController extends Controller
         $order->discount_total = $discount;
         $order->payable_total = $payable;
 
-        // Optional: flag
-        $order->status = $order->status === 'completed' ? 'exchanged' : ($order->status ?? 'exchanged');
+        // Optional: flag -- 'exchanged' was never added to orders.status's
+        // ENUM (pending/processing/completed/paid/refunded/returned/cancelled/
+        // merged), so assigning it here threw a MySQL "Data truncated for
+        // column 'status'" error and rolled back the *entire* exchange
+        // (return + issue stock movements included) every time this ran
+        // against a completed order -- the normal case for an exchange.
+        // Leave the order's status as-is; the exchange's own lifecycle is
+        // already tracked on the `exchanges` table (DRAFT/POSTED/CANCELLED).
         $order->save();
     }
 

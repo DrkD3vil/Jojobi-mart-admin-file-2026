@@ -26,9 +26,7 @@ class CartItem extends Model
         'gift_source',
         'gift_source_id',
         'parent_cart_item_id',
-
-
-
+        'location_id',
     ];
 
 

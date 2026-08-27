@@ -23,7 +23,7 @@
         </nav>
 
         <!-- Header Section -->
-        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 p-6 mb-8 shadow-[var(--card-shadow)]">
+        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 p-6 mb-8 shadow-[var(--card-shadow)]" data-reveal>
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div class="flex-1">
                     <div class="flex items-center gap-3 mb-3">
@@ -127,7 +127,7 @@
         </div>
 
         <!-- Privileges Table -->
-        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] hover:shadow-[var(--card-shadow-hover)] transition-all duration-500">
+        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] hover:shadow-[var(--card-shadow-hover)] transition-all duration-500" data-reveal>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
@@ -183,9 +183,16 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[var(--bg-tertiary)] text-[var(--text-secondary)] font-mono">
-                                        {{ $privilege->slug }}
-                                    </span>
+                                    <div class="flex flex-col gap-1 items-start">
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[var(--bg-tertiary)] text-[var(--text-secondary)] font-mono">
+                                            {{ $privilege->slug }}
+                                        </span>
+                                        @if($privilege->access_key)
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--success)]/10 text-[var(--success)] font-mono" title="Grants this access key when assigned to a role">
+                                                {{ $privilege->access_key }}
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <p class="text-sm text-[var(--text-secondary)] max-w-xs truncate">
@@ -273,7 +280,7 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6" data-reveal>
             <div class="glass-card p-5 rounded-xl border border-[var(--border-color)]/30">
                 <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                     <svg class="w-5 h-5 text-[var(--info)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -530,7 +537,7 @@ document.addEventListener('keydown', function(e) {
         background: var(--glass-base);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--border-color);
     }
 
     .btn-primary {
@@ -547,7 +554,7 @@ document.addEventListener('keydown', function(e) {
     /* Sort button */
     .sort-btn {
         opacity: 0.5;
-        transition: opacity 0.2s ease;
+        transition: opacity var(--transition-fast) ease;
     }
 
     .sort-btn:hover {
@@ -556,11 +563,11 @@ document.addEventListener('keydown', function(e) {
 
     /* Table row hover effects */
     tr {
-        transition: all 0.3s ease;
+        transition: all var(--transition-normal) ease;
     }
 
     tr:hover {
-        background: var(--accent-color)/5 !important;
+        background: color-mix(in oklch, var(--accent-color) 5%, transparent) !important;
     }
 
     /* Smooth scrollbar */
@@ -585,7 +592,7 @@ document.addEventListener('keydown', function(e) {
 
     /* Action buttons */
     .action-btn {
-        transition: all 0.2s ease;
+        transition: all var(--transition-fast) ease;
     }
 
     .action-btn:hover {
@@ -594,11 +601,11 @@ document.addEventListener('keydown', function(e) {
 
     /* Modal Animation */
     #deleteModal {
-        transition: opacity 0.3s ease;
+        transition: opacity var(--transition-normal) ease;
     }
 
     #modalContent {
-        transition: all 0.3s ease;
+        transition: all var(--transition-normal) ease;
     }
 
     /* Loading animation */

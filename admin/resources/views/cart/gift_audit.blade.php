@@ -1,8 +1,98 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    /* ===== Shared-token styling for gift audit report ===== */
+    .cardx {
+        background: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        transition: box-shadow var(--transition-normal) ease, transform var(--transition-normal) ease;
+    }
+    .cardx:hover { box-shadow: var(--card-shadow-hover); }
+    .cardx-hd {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: var(--secondary);
+    }
+    .subtle { font-size: 12px; color: var(--muted-foreground); }
+    .strong { font-weight: 700; color: var(--foreground); }
+
+    .inputx {
+        background: var(--input);
+        border: 1px solid var(--border);
+        color: var(--foreground);
+        border-radius: calc(var(--radius) - 2px);
+        padding: 10px 12px;
+        outline: none;
+        transition: box-shadow var(--transition-fast) ease, border-color var(--transition-fast) ease;
+        font-weight: 500;
+    }
+    .inputx:focus {
+        border-color: var(--sidebar-primary);
+        box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+
+    .btnx {
+        border: 1px solid transparent;
+        background: var(--sidebar-primary);
+        color: var(--sidebar-primary-foreground);
+        border-radius: calc(var(--radius) - 2px);
+        padding: 8px 14px;
+        font-weight: 700;
+        user-select: none;
+        cursor: pointer;
+        transition: transform var(--transition-fast) ease, background var(--transition-fast) ease, opacity var(--transition-fast) ease;
+        font-size: 13px;
+    }
+    .btnx:hover { opacity: .9; transform: translateY(-1px); }
+    .btnx-ghost { background: transparent; border: 1px solid var(--border); color: var(--foreground); }
+    .btnx-ghost:hover { background: var(--secondary); transform: none; }
+
+    .pill {
+        font-size: 11px;
+        padding: 2px 9px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--secondary);
+        color: var(--foreground);
+        font-weight: 700;
+        white-space: nowrap;
+        display: inline-block;
+    }
+    .pill.success { border-color: var(--success); background: color-mix(in oklch, var(--success) 15%, transparent); color: var(--success); }
+    .pill.warning { border-color: var(--warning); background: color-mix(in oklch, var(--warning) 15%, transparent); color: var(--warning); }
+    .pill.danger { border-color: var(--danger); background: color-mix(in oklch, var(--danger) 15%, transparent); color: var(--danger); }
+
+    .table-wrap { overflow-x: auto; }
+    .tablex { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 13px; }
+    .tablex th, .tablex td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--foreground); }
+    .tablex thead th {
+        background: var(--secondary);
+        font-size: 11px;
+        letter-spacing: .25px;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .tablex .money { text-align: right; }
+    .empty-state { padding: 24px; text-align: center; color: var(--muted-foreground); }
+
+    @media (max-width: 768px) {
+        .gift-audit-toolbar { flex-direction: column; align-items: flex-start !important; }
+        .gift-details-grid { grid-template-columns: 1fr !important; }
+    }
+</style>
 <div class="page" style="max-width:1200px;margin:0 auto;padding:18px;">
-    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px;">
+    <div class="gift-audit-toolbar" style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px;">
         <div>
             <div class="subtle">Gift Analyzer</div>
             <h2 style="margin:0;">Cart Free Offer Report</h2>
@@ -33,20 +123,20 @@
     </div>
 
     @if(session('ok'))
-        <div class="cardx" style="padding:10px 12px;margin-bottom:12px;border:1px solid var(--border);">
+        <div class="cardx" data-reveal style="padding:10px 12px;margin-bottom:12px;border:1px solid var(--border);">
             ✅ {{ session('ok') }}
         </div>
     @endif
 
     @if(!$cart)
-        <div class="cardx" style="padding:18px;">
+        <div class="cardx" data-reveal style="padding:18px;">
             <div class="strong">No cart found</div>
             <div class="subtle" style="margin-top:6px;">Pass a cart_id in the URL or open cart first.</div>
         </div>
         @return
     @endif
 
-    <div class="cardx" style="margin-bottom:12px;">
+    <div class="cardx" data-reveal style="margin-bottom:12px;">
         <div class="cardx-hd">
             <div>
                 <div class="strong">Cart #{{ $cart->id }}</div>
@@ -61,7 +151,7 @@
         </div>
     </div>
 
-    <div class="cardx">
+    <div class="cardx" data-reveal>
         <div class="cardx-hd">
             <div class="strong">Offer Rows</div>
             <div class="subtle">Click “Details” to expand batch-level free stock & offer math.</div>
@@ -148,9 +238,9 @@
                         </td>
                     </tr>
 
-                    <tr id="{{ $rowId }}" style="display:none;background:rgba(0,0,0,.02);">
+                    <tr id="{{ $rowId }}" style="display:none;background:var(--secondary);">
                         <td colspan="8" style="padding:12px 14px;">
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                            <div class="gift-details-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                                 <div class="cardx" style="padding:12px;">
                                     <div class="strong">Offer Math</div>
                                     <div class="subtle" style="margin-top:8px;line-height:1.7;">

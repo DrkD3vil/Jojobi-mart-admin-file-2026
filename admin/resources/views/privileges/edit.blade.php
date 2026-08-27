@@ -39,7 +39,7 @@
         </nav>
 
         <!-- Header -->
-        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 p-6 mb-8 shadow-[var(--card-shadow)]">
+        <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 p-6 mb-8 shadow-[var(--card-shadow)]" data-reveal>
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div class="flex-1">
                     <div class="flex items-center gap-3 mb-3">
@@ -67,7 +67,7 @@
                         </div>
                         <div class="p-3 bg-[var(--bg-tertiary)] rounded-xl">
                             <p class="text-xs text-[var(--text-secondary)]">Last Updated</p>
-                            <p class="text-sm font-medium text-[var(--text-primary)]">{{ $privilege->updated_at->diffForHumans() }}</p>
+                            <p class="text-sm font-medium text-[var(--text-primary)]">{{ $privilege->updated_at?->diffForHumans() ?? '—' }}</p>
                         </div>
                         <div class="p-3 bg-[var(--bg-tertiary)] rounded-xl">
                             <p class="text-xs text-[var(--text-secondary)]">Used in Roles</p>
@@ -98,7 +98,7 @@
             @method('PUT')
 
             <!-- Basic Information Card -->
-            <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] hover:shadow-[var(--card-shadow-hover)] transition-all duration-500">
+            <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)] hover:shadow-[var(--card-shadow-hover)] transition-all duration-500" data-reveal>
                 <div class="border-b border-[var(--border-color)]/30 px-6 py-4 bg-gradient-to-r from-[var(--bg-tertiary)] to-[var(--bg-tertiary)]/50">
                     <h2 class="text-xl font-semibold text-[var(--text-primary)] flex items-center gap-3">
                         <svg class="w-5 h-5 text-[var(--accent-color)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,6 +204,35 @@
                         @enderror
                     </div>
 
+                    <!-- Access Key Field -->
+                    <div class="space-y-3">
+                        <label for="access_key" class="block">
+                            <span class="text-sm font-medium text-[var(--text-primary)]">Linked Access Key</span>
+                            <span class="text-xs text-[var(--text-secondary)] ml-1">Optional</span>
+                        </label>
+                        <select id="access_key"
+                                name="access_key"
+                                class="w-full px-4 py-3 bg-[var(--input)] border border-[var(--border-color)] rounded-xl focus:ring-2 focus:ring-[var(--accent-color)] focus:border-transparent outline-none transition-all duration-300">
+                            <option value="">— Not linked (label only) —</option>
+                            @foreach ($accessKeyOptions as $key => $label)
+                                <option value="{{ $key }}" @selected(old('access_key', $privilege->access_key) === $key)>{{ $label }} ({{ $key }})</option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-[var(--text-secondary)]">When set, assigning this privilege to a role automatically grants that role the matching access key.
+                            @if($privilege->roles->count() > 0)
+                                <span class="text-[var(--warning)]">Changing it will move the access already auto-granted through {{ $privilege->roles->count() }} role(s) to the new key.</span>
+                            @endif
+                        </p>
+                        @error('access_key')
+                            <p class="text-sm text-[var(--danger)] mt-1 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                </svg>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
                     <!-- Preview -->
                     <div class="mt-6 pt-6 border-t border-[var(--border-color)]/30">
                         <label class="text-sm font-medium text-[var(--text-primary)] mb-3 block">Preview</label>
@@ -229,7 +258,7 @@
 
             <!-- Impact Analysis -->
             @if($privilege->roles->count() > 0)
-                <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)]">
+                <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 overflow-hidden shadow-[var(--card-shadow)]" data-reveal>
                     <div class="border-b border-[var(--border-color)]/30 px-6 py-4 bg-gradient-to-r from-[var(--bg-tertiary)] to-[var(--bg-tertiary)]/50">
                         <h2 class="text-xl font-semibold text-[var(--text-primary)] flex items-center gap-3">
                             <svg class="w-5 h-5 text-[var(--warning)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,7 +304,7 @@
             @endif
 
             <!-- Form Actions -->
-            <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 p-6">
+            <div class="glass-card rounded-2xl border border-[var(--border-color)]/30 p-6" data-reveal>
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-2">Save Changes</h3>
@@ -611,7 +640,7 @@ document.addEventListener('DOMContentLoaded', () => {
         background: var(--glass-base);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--border-color);
     }
 
     .btn-primary {
@@ -633,12 +662,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* Character counter */
     .char-counter {
-        transition: color 0.2s ease;
+        transition: color var(--transition-fast) ease;
     }
 
     /* Preview styling */
     #namePreview, #slugPreview, #descriptionPreview {
-        transition: all 0.3s ease;
+        transition: all var(--transition-normal) ease;
     }
 
     /* Loading animation */

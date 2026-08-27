@@ -1049,9 +1049,13 @@
                     <input type="hidden" name="location_id" id="rwzFormLoc">
                     <input type="hidden" name="refund_method" id="rwzFormRefund">
                     <input type="hidden" name="note" id="rwzFormNote">
+                    {{-- One token per page render, checked server-side in
+                         ReturnController::store() -- protects a double-click or
+                         browser resubmit from posting the same return twice. --}}
+                    <input type="hidden" name="idempotency_key" value="{{ $idempotencyKey }}">
 
                     <div class="rwz-center rwz-mt24">
-                        <button type="submit" class="rwz-btn rwz-btn--primary"
+                        <button type="submit" class="rwz-btn rwz-btn--primary" id="rwzSubmitBtn"
                             style="padding:14px 32px; font-size:1.1rem;">
                             <i class="fas fa-check-circle"></i> Submit Return Request
                         </button>
@@ -1748,6 +1752,17 @@
                     e.preventDefault();
                     showToast('Please set valid quantities for selected items', 'error');
                     return;
+                }
+
+                // Guard against a double-click/double-submit firing this twice
+                // before the page navigates away.
+                const submitBtn = $('rwzSubmitBtn');
+                if (submitBtn) {
+                    if (submitBtn.disabled) {
+                        e.preventDefault();
+                        return;
+                    }
+                    submitBtn.disabled = true;
                 }
 
                 // optional: clear config after submit

@@ -7,23 +7,22 @@
     @endphp
     <div class="container-fluid px-4">
         {{-- Stats Cards --}}
-        <div class="stats-grid mb-6 animate-slide-up">
+        <div class="stats-grid mb-6 animate-slide-up" data-reveal>
             <!-- Total Products Section -->
             <div id="total-products-section" class="stat-card group hover:scale-[1.02] transition-all duration-300">
-                <div
-                    class="stat-icon total bg-gradient-to-br from-blue-100 to-blue-50 group-hover:from-blue-200 group-hover:to-blue-100">
-                    <svg viewBox="0 0 24 24" class="text-blue-600">
+                <div class="stat-icon total">
+                    <svg viewBox="0 0 24 24">
                         <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z" fill="currentColor" />
                     </svg>
                 </div>
                 <div class="stat-content">
                     <h3 class="stat-value" id="total-products-count">{{ $products->total() }}</h3>
                     <p class="stat-label">Total Products</p>
-                    <span class="text-xs text-gray-500 mt-1">{{ $products->where('is_active', false)->count() }}
+                    <span class="text-xs mt-1" style="color: var(--muted-foreground);">{{ $products->where('is_active', false)->count() }}
                         inactive</span>
                 </div>
                 <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" style="color: var(--muted-foreground);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                 </div>
@@ -31,9 +30,8 @@
 
             <!-- Active Products Section -->
             <div id="active-products-section" class="stat-card group hover:scale-[1.02] transition-all duration-300">
-                <div
-                    class="stat-icon active bg-gradient-to-br from-green-100 to-green-50 group-hover:from-green-200 group-hover:to-green-100">
-                    <svg viewBox="0 0 24 24" class="text-green-600">
+                <div class="stat-icon active">
+                    <svg viewBox="0 0 24 24">
                         <path
                             d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
                             fill="currentColor" />
@@ -43,12 +41,12 @@
                     <h3 class="stat-value" id="active-products-count">{{ $products->where('is_active', true)->count() }}
                     </h3>
                     <p class="stat-label">Active Products</p>
-                    <span class="text-xs text-green-600 mt-1 font-medium">
+                    <span class="text-xs mt-1 font-medium" style="color: var(--success);">
                         {{ $products->total() > 0 ? round(($products->where('is_active', true)->count() / $products->total()) * 100, 1) : 0 }}%
                     </span>
                 </div>
                 <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" style="color: var(--muted-foreground);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                 </div>
@@ -57,9 +55,8 @@
             <!-- Free Products Section -->
             <a href="{{ route('product.gift-audit') }}" id="free-products-section"
                 class="stat-card group hover:scale-[1.02] transition-all duration-300 text-decoration-none">
-                <div
-                    class="stat-icon free bg-gradient-to-br from-purple-100 to-purple-50 group-hover:from-purple-200 group-hover:to-purple-100">
-                    <svg viewBox="0 0 24 24" class="text-purple-600">
+                <div class="stat-icon free">
+                    <svg viewBox="0 0 24 24">
                         <path
                             d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35L12 4l-.5-.65C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"
                             fill="currentColor" />
@@ -70,10 +67,10 @@
                         {{ $products_batchs->where('is_free_offer_active', true)->count() }}
                     </h3>
                     <p class="stat-label">Free Products</p>
-                    <span class="text-xs text-purple-600 mt-1 font-medium">Gift Audit</span>
+                    <span class="text-xs mt-1 font-medium" style="color: var(--chart-5);">Gift Audit</span>
                 </div>
                 <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" style="color: var(--muted-foreground);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                 </div>
@@ -81,9 +78,8 @@
 
             <!-- Categories Section -->
             <div id="categories-section" class="stat-card group hover:scale-[1.02] transition-all duration-300">
-                <div
-                    class="stat-icon categories bg-gradient-to-br from-amber-100 to-amber-50 group-hover:from-amber-200 group-hover:to-amber-100">
-                    <svg viewBox="0 0 24 24" class="text-amber-600">
+                <div class="stat-icon categories">
+                    <svg viewBox="0 0 24 24">
                         <path d="M12 2l-5.5 9h11z" fill="currentColor" />
                         <circle cx="17.5" cy="17.5" r="4.5" fill="currentColor" />
                         <path d="M3 13.5h8v8H3z" fill="currentColor" />
@@ -93,10 +89,10 @@
                     <h3 class="stat-value" id="categories-count">
                         {{ $categoriesCount ?? $products->unique('category_id')->count() }}</h3>
                     <p class="stat-label">Categories</p>
-                    <span class="text-xs text-gray-500 mt-1">Product types</span>
+                    <span class="text-xs mt-1" style="color: var(--muted-foreground);">Product types</span>
                 </div>
                 <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" style="color: var(--muted-foreground);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                 </div>
@@ -104,9 +100,8 @@
 
             <!-- Total Images Section -->
             <div id="total-images-section" class="stat-card group hover:scale-[1.02] transition-all duration-300">
-                <div
-                    class="stat-icon images bg-gradient-to-br from-rose-100 to-rose-50 group-hover:from-rose-200 group-hover:to-rose-100">
-                    <svg viewBox="0 0 24 24" class="text-rose-600">
+                <div class="stat-icon images">
+                    <svg viewBox="0 0 24 24">
                         <path
                             d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"
                             fill="currentColor" />
@@ -116,13 +111,13 @@
                     <h3 class="stat-value" id="total-images-count">
                         {{ $totalImages ?? $products->sum(fn($p) => $p->images->count()) }}</h3>
                     <p class="stat-label">Total Images</p>
-                    <span class="text-xs text-gray-500 mt-1">
+                    <span class="text-xs mt-1" style="color: var(--muted-foreground);">
                         {{ $products->count() > 0 ? round(($totalImages ?? $products->sum(fn($p) => $p->images->count())) / $products->count(), 1) : 0 }}
                         avg per product
                     </span>
                 </div>
                 <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" style="color: var(--muted-foreground);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                 </div>
@@ -131,9 +126,8 @@
             <!-- Trash Section -->
             <a href="{{ route('products.trash') }}" id="trash-section"
                 class="stat-card group hover:scale-[1.02] transition-all duration-300 text-decoration-none">
-                <div
-                    class="stat-icon danger bg-gradient-to-br from-gray-100 to-gray-50 group-hover:from-gray-200 group-hover:to-gray-100">
-                    <svg viewBox="0 0 24 24" class="text-gray-600">
+                <div class="stat-icon danger">
+                    <svg viewBox="0 0 24 24">
                         <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
                             fill="currentColor" />
                     </svg>
@@ -141,10 +135,10 @@
                 <div class="stat-content">
                     <h3 class="stat-value" id="trash-count">{{ $trashedCount }}</h3>
                     <p class="stat-label">Trash (Deleted)</p>
-                    <span class="text-xs text-gray-600 mt-1 font-medium">Restore or delete permanently</span>
+                    <span class="text-xs mt-1 font-medium" style="color: var(--muted-foreground);">Restore or delete permanently</span>
                 </div>
                 <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" style="color: var(--muted-foreground);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                 </div>
@@ -152,9 +146,9 @@
         </div>
 
         {{-- Products Table Container --}}
-        <div class="products-card glass-effect animate-slide-up-delay">
+        <div class="products-card glass-effect animate-slide-up-delay" data-reveal>
             {{-- Table Header with Search --}}
-            <div class="table-header">
+            <div class="table-header" data-reveal>
                 <div class="table-search">
                     <div class="search-wrapper">
                         <svg viewBox="0 0 24 24" class="search-icon">
@@ -705,7 +699,7 @@
         .stat-icon {
             width: 56px;
             height: 56px;
-            border-radius: 12px;
+            border-radius: calc(var(--radius) + 2px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -718,18 +712,28 @@
         }
 
         .stat-icon.active {
-            background: linear-gradient(135deg, var(--success), #34d399);
+            background: linear-gradient(135deg, var(--success), color-mix(in oklch, var(--success) 65%, white));
             color: white;
         }
 
         .stat-icon.categories {
-            background: linear-gradient(135deg, var(--warning), #fbbf24);
+            background: linear-gradient(135deg, var(--warning), color-mix(in oklch, var(--warning) 65%, white));
             color: white;
         }
 
         .stat-icon.images {
-            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            background: linear-gradient(135deg, var(--chart-4), color-mix(in oklch, var(--chart-4) 65%, white));
             color: white;
+        }
+
+        .stat-icon.free {
+            background: linear-gradient(135deg, var(--chart-5), color-mix(in oklch, var(--chart-5) 65%, white));
+            color: white;
+        }
+
+        .stat-icon.danger {
+            background: linear-gradient(135deg, var(--muted-foreground), color-mix(in oklch, var(--muted-foreground) 55%, var(--card)));
+            color: var(--card);
         }
 
         .stat-icon svg {
@@ -872,7 +876,7 @@
 
         /* Search highlighting */
         .search-highlight {
-            background-color: rgba(255, 235, 59, 0.3);
+            background-color: color-mix(in oklch, var(--warning) 35%, transparent);
             color: inherit;
             padding: 0 2px;
             border-radius: 2px;
@@ -923,7 +927,7 @@
         .view-btn.active {
             background: var(--card);
             color: var(--text-primary);
-            box-shadow: var(--shadow-sm);
+            box-shadow: var(--card-shadow);
         }
 
         .view-btn svg {
@@ -1018,7 +1022,7 @@
             padding: 0.375rem 0.75rem;
             background: var(--muted);
             color: var(--text-primary);
-            border-radius: 20px;
+            border-radius: 999px;
             font-size: 0.875rem;
             font-weight: 500;
             white-space: nowrap;
@@ -1071,7 +1075,7 @@
         .image-thumbnail {
             width: 40px;
             height: 40px;
-            border-radius: 6px;
+            border-radius: calc(var(--radius) - 4px);
             background-size: cover;
             background-position: center;
             position: relative;
@@ -1095,7 +1099,7 @@
         .no-images {
             width: 40px;
             height: 40px;
-            border-radius: 6px;
+            border-radius: calc(var(--radius) - 4px);
             background: var(--muted);
             display: flex;
             align-items: center;
@@ -1111,7 +1115,7 @@
         .image-more {
             width: 40px;
             height: 40px;
-            border-radius: 6px;
+            border-radius: calc(var(--radius) - 4px);
             background: var(--accent);
             color: var(--text-primary);
             display: flex;
@@ -1138,7 +1142,7 @@
         .action-btn {
             width: 36px;
             height: 36px;
-            border-radius: 8px;
+            border-radius: calc(var(--radius) - 2px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1461,7 +1465,7 @@
             padding: 0.375rem 0.75rem;
             background: linear-gradient(135deg, var(--success), var(--success) / 0.1);
             color: var(--success);
-            border-radius: 20px;
+            border-radius: 999px;
             font-size: 0.875rem;
             font-weight: 500;
             white-space: nowrap;

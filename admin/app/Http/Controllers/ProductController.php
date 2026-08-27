@@ -45,19 +45,16 @@ class ProductController extends Controller
                     'discounted_price',
                     'discount_percentage',
                 ])
-                    // ✅ Ledger-driven stock quantity per batch:
+                    // ✅ Stock quantity per batch, summed from batch_stocks.on_hand
+                    // (the source of truth used everywhere else — Product::totalStockQuantity(),
+                    // ProductBatch::totalOnHand(), ProductBatchController::all(), etc.).
+                    // Previously this summed stock_ledgers instead, but stock_ledgers is only
+                    // written by InventoryService::post() (stock transfers/adjustments) — batch
+                    // creation/edit never write to it — so this returned near-zero/wrong figures.
                     ->addSelect([
-                        'stock_qty' => DB::table('stock_ledgers as sl')
-                            ->selectRaw("
-                        COALESCE(SUM(
-                            CASE
-                                WHEN sl.direction = 'IN' THEN sl.qty
-                                WHEN sl.direction = 'OUT' THEN -sl.qty
-                                ELSE 0
-                            END
-                        ), 0)
-                    ")
-                            ->whereColumn('sl.product_batch_id', 'product_batches.id')
+                        'stock_qty' => DB::table('batch_stocks as bs')
+                            ->selectRaw('COALESCE(SUM(bs.on_hand), 0)')
+                            ->whereColumn('bs.product_batch_id', 'product_batches.id')
                     ]);
             }])
             ->latest()
@@ -833,7 +830,11 @@ class ProductController extends Controller
             return response()->json(['valid' => false, 'message' => 'Barcode too short']);
         }
 
-        $exists = \App\Models\Product::where('barcode', $barcode)->exists();
+        // ✅ products.barcode is uniquely indexed at the DB level regardless of soft-delete,
+        // so an archived (trashed) product still occupies its barcode. Excluding trashed
+        // rows here (the default scope) would report a taken barcode as "available" and
+        // let the create form pass live validation only to fail on submit.
+        $exists = \App\Models\Product::withTrashed()->where('barcode', $barcode)->exists();
 
         return response()->json([
             'valid' => !$exists,
@@ -869,10 +870,20 @@ class ProductController extends Controller
     {
         $product = \App\Models\Product::onlyTrashed()->findOrFail($id);
 
-        // ⚠️ This will fail if exchange_lines/order_items/etc reference product_id
-        $product->forceDelete();
+        try {
+            // ⚠️ This will fail if exchange_lines/order_items/etc reference product_id
+            $product->forceDelete();
 
-        return redirect()->route('products.trash')->with('success', 'Product permanently deleted.');
+            return redirect()->route('products.trash')->with('success', 'Product permanently deleted.');
+        } catch (QueryException $e) {
+            Log::error('Product force delete failed', [
+                'product_id' => $id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('products.trash')
+                ->with('error', 'Cannot permanently delete this product because it has history (orders/returns/batches).');
+        }
     }
 
     /**

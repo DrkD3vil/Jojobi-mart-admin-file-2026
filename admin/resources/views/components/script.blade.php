@@ -230,6 +230,63 @@
                 item.style.animation = 'none';
             });
         });
+
+        // --- Mobile Search Overlay ---
+        const mobileSearchTrigger = document.getElementById('mobile-search-trigger');
+        const mobileSearchOverlay = document.getElementById('mobile-search-overlay');
+        const mobileSearchInput = document.getElementById('mobile-search-input');
+        const mobileSearchClose = document.getElementById('mobile-search-close');
+
+        function openMobileSearch() {
+            if (!mobileSearchOverlay) return;
+            mobileSearchOverlay.classList.add('active');
+            setTimeout(() => mobileSearchInput && mobileSearchInput.focus(), 150);
+        }
+        function closeMobileSearch() {
+            if (!mobileSearchOverlay) return;
+            mobileSearchOverlay.classList.remove('active');
+        }
+        if (mobileSearchTrigger) mobileSearchTrigger.addEventListener('click', openMobileSearch);
+        if (mobileSearchClose) mobileSearchClose.addEventListener('click', closeMobileSearch);
+        if (mobileSearchOverlay) {
+            mobileSearchOverlay.addEventListener('click', (e) => {
+                if (e.target === mobileSearchOverlay) closeMobileSearch();
+            });
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && mobileSearchOverlay && mobileSearchOverlay.classList.contains('active')) {
+                closeMobileSearch();
+            }
+        });
+
+        // --- Scroll-triggered reveal: any element with [data-reveal] fades/lifts in
+        //     the first time it enters the viewport (see style.blade.php for the CSS). ---
+        const revealEls = document.querySelectorAll('[data-reveal]');
+        if ('IntersectionObserver' in window && revealEls.length) {
+            const revealIO = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        revealIO.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+            revealEls.forEach((el) => revealIO.observe(el));
+        } else {
+            revealEls.forEach((el) => el.classList.add('is-visible'));
+        }
+
+        // --- Header scroll state (adds shadow once the page content scrolls) ---
+        const appHeader = document.querySelector('header');
+        const appScroll = document.getElementById('app-scroll');
+        function updateHeaderScrollState() {
+            if (!appHeader || !appScroll) return;
+            appHeader.classList.toggle('header-scrolled', appScroll.scrollTop > 4);
+        }
+        if (appScroll) {
+            appScroll.addEventListener('scroll', updateHeaderScrollState, { passive: true });
+            updateHeaderScrollState();
+        }
     });
 
     // Initial setup for desktop view (your existing logic kept)
@@ -239,4 +296,44 @@
             sidebar.style.display = 'none';
         }
     }
+
+    // --- Flatpickr: swap every native date input for a themed calendar
+    //     popup (the browser-native one renders inconsistently and is not
+    //     styled to match the app). The real input keeps its name/value in
+    //     Y-m-d so existing form submits and change-listeners keep working;
+    //     a friendly "d M, Y" display input sits in front of it. ---
+    (function () {
+        if (typeof flatpickr === 'undefined') return;
+
+        function initOne(el) {
+            if (el._flatpickr) return;
+            flatpickr(el, {
+                altInput: true,
+                altFormat: 'd M, Y',
+                dateFormat: 'Y-m-d',
+                allowInput: true,
+                altInputClass: el.className,
+            });
+        }
+
+        function initDateInputs(root) {
+            (root || document).querySelectorAll('input[type="date"]').forEach(initOne);
+        }
+
+        initDateInputs();
+
+        // Pages that build rows/forms dynamically (cart, orders, product
+        // batches, etc.) can add date inputs after this script has run --
+        // catch those too instead of only initializing once at load.
+        const dateInputObserver = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                mutation.addedNodes.forEach(function (node) {
+                    if (node.nodeType !== 1) return;
+                    if (node.matches('input[type="date"]')) initOne(node);
+                    initDateInputs(node);
+                });
+            });
+        });
+        dateInputObserver.observe(document.body, { childList: true, subtree: true });
+    })();
 </script>

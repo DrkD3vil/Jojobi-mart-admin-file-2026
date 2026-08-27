@@ -1,363 +1,895 @@
 @extends('layouts.app')
 
 @section('content')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <style>
+        :root {
+            --order-primary: #3b82f6;
+            --order-success: #22c55e;
+            --order-warning: #eab308;
+            --order-danger: #ef4444;
+            --order-info: #8b5cf6;
+            --order-bg: #f8fafc;
+        }
 
-<style>
-/* =========================
-   FIXED COLOR SYSTEM (YOURS)
-   ========================= */
-:root{
-  --radius: 0.625rem;
+        /* Order Information Page Styles */
+        .order-wrap {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
 
-  --transition-fast: 150ms;
-  --transition-normal: 250ms;
-  --transition-slow: 350ms;
+        /* Header Section */
+        .order-header {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 32px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
 
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 15%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+        .order-title-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
 
-  --sidebar-primary: oklch(0.488 0.243 264.376);
+        .order-title-section h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
 
-  --success: oklch(0.696 0.17 162.48);
-  --warning: oklch(0.769 0.188 70.08);
-  --info: oklch(0.488 0.243 264.376);
-  --danger: oklch(0.704 0.191 22.216);
+        .order-badge {
+            padding: 6px 16px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
 
-  --card-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.25);
-  --card-shadow-hover: 0 6px 12px -1px rgb(0 0 0 / 0.35), 0 3px 6px -2px rgb(0 0 0 / 0.25);
-  --dropdown-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+        .order-badge-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
 
-  --accent-color: var(--sidebar-primary);
-  --accent-hover: oklch(0.488 0.243 264.376 / 0.8);
-  --accent-glow: oklch(0.488 0.243 264.376 / 0.2);
+        .order-badge-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
 
-  --bg-primary: var(--background);
-  --bg-secondary: var(--card);
-  --bg-tertiary: var(--secondary);
-  --text-primary: var(--foreground);
-  --text-secondary: var(--muted-foreground);
-  --text-muted: oklch(0.708 0 0 / 0.7);
-  --border-color: var(--border);
-}
+        .order-badge-paid {
+            background: #dbeafe;
+            color: #1e40af;
+        }
 
-/* LIGHT MODE */
-html[data-theme='light']{
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.12 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.12 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.12 0 0);
-  --primary: oklch(0.15 0 0);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.15 0 0);
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.5 0 0);
-  --accent: oklch(0.96 0 0);
-  --accent-foreground: oklch(0.15 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.9 0 0);
-  --input: oklch(0.96 0 0);
-  --ring: oklch(0.65 0 0);
+        .order-badge-refunded {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
 
-  --sidebar-primary: oklch(0.646 0.222 41.116);
+        .order-badge-returned {
+            background: #f3e8ff;
+            color: #5b21b6;
+        }
 
-  --success: oklch(0.627 0.194 149.214);
-  --warning: oklch(0.769 0.188 70.08);
-  --info: oklch(0.623 0.214 259.815);
-  --danger: oklch(0.577 0.245 27.325);
+        .order-badge-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
 
-  --card-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.08);
-  --card-shadow-hover: 0 6px 12px -1px rgb(0 0 0 / 0.12), 0 3px 6px -2px rgb(0 0 0 / 0.08);
-  --dropdown-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        .order-action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
 
-  --accent-color: var(--sidebar-primary);
-  --accent-hover: oklch(0.646 0.222 41.116 / 0.8);
-  --accent-glow: oklch(0.646 0.222 41.116 / 0.1);
+        /* Stats Grid */
+        .order-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
 
-  --bg-primary: var(--background);
-  --bg-secondary: var(--card);
-  --bg-tertiary: var(--secondary);
-  --text-primary: var(--foreground);
-  --text-secondary: var(--muted-foreground);
-  --text-muted: oklch(0.5 0 0 / 0.7);
-  --border-color: var(--border);
-}
+        .order-stat-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.2s;
+        }
 
-/* =========================
-   ORDERS UI (unique: ords-)
-   ========================= */
-.ords-wrap{max-width:1200px;margin:0 auto;padding:16px;color:var(--foreground);}
-.ords-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;}
-.ords-title{font-size:1.5rem;font-weight:800;display:flex;align-items:center;gap:10px}
-.ords-sub{color:var(--text-secondary);font-size:.95rem;margin-top:6px;}
-.ords-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-.ords-card{background:var(--card);border:1px solid var(--border-color);border-radius:var(--radius);padding:16px;box-shadow:var(--card-shadow);margin-bottom:16px;}
-.ords-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-@media(max-width: 900px){.ords-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width: 520px){.ords-grid{grid-template-columns:1fr}}
-.ords-kv{background:color-mix(in oklch, var(--card) 70%, var(--bg-tertiary) 30%);border:1px solid var(--border-color);border-radius:calc(var(--radius) - 2px);padding:12px;}
-.ords-k{color:var(--text-secondary);font-size:.85rem;margin-bottom:6px;}
-.ords-v{font-weight:800;}
-.ords-mini{color:var(--text-secondary);font-size:.85rem;margin-top:4px;}
-.ords-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-color);background:var(--bg-tertiary);padding:6px 10px;border-radius:999px;font-size:.85rem;}
-.ords-btn{border:1px solid var(--border-color);padding:10px 12px;border-radius:calc(var(--radius) - 2px);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all var(--transition-fast);}
-.ords-btn-primary{background:var(--accent-color);border-color:transparent;color:white;}
-.ords-btn-primary:hover{background:var(--accent-hover);box-shadow:0 8px 20px -8px var(--accent-glow);}
-.ords-btn-ghost{background:transparent;color:var(--foreground);}
-.ords-btn-ghost:hover{background:var(--accent);border-color:var(--accent-color);}
-.ords-input{width:100%;padding:10px 12px;border-radius:calc(var(--radius) - 2px);border:1px solid var(--border-color);background:var(--input);color:var(--foreground);outline:none;}
-.ords-input:focus{border-color:var(--accent-color);box-shadow:0 0 0 3px var(--accent-glow);}
-.ords-tableWrap{overflow:auto;border:1px solid var(--border-color);border-radius:var(--radius);}
-.ords-table{width:100%;border-collapse:collapse;min-width:1200px;}
-.ords-table thead{background:var(--bg-tertiary);}
-.ords-table th,.ords-table td{padding:12px;border-bottom:1px solid var(--border-color);text-align:left;vertical-align:middle;}
-.ords-table tbody tr:hover{background:var(--accent);}
-.ords-link{color:var(--foreground);text-decoration:none;border-bottom:1px dashed color-mix(in oklch, var(--foreground) 25%, transparent 75%);}
-.ords-link:hover{border-bottom-style:solid;}
-.ords-badge{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border-color);}
-.ords-badge.ok{background:color-mix(in oklch, var(--success) 35%, var(--card) 65%);}
-.ords-badge.warn{background:color-mix(in oklch, var(--warning) 35%, var(--card) 65%);}
-.ords-badge.bad{background:color-mix(in oklch, var(--danger) 35%, var(--card) 65%);}
-.ords-tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-color);background:color-mix(in oklch, var(--info) 22%, var(--card) 78%);padding:4px 10px;border-radius:999px;font-size:.8rem;}
-</style>
+        .order-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
 
-@php
-  // ✅ Main rule: NET uses returned_qty only (exchange updates returned_qty)
-  $itemsCount = $order->items->count();
-  $totalQty = (float)$order->items->sum(fn($it)=>(float)$it->quantity);
-  $totalReturned = (float)$order->items->sum(fn($it)=>(float)($it->returned_qty ?? 0));
-@endphp
+        .order-stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
 
-<div class="ords-wrap">
-  <div class="ords-top">
-    <div>
-      <div class="ords-title"><i class="fas fa-receipt"></i> Order {{ $order->order_no ?? ('ORD-'.$order->id) }}</div>
-      <div class="ords-sub">Order details + items (net qty uses returned_qty only to avoid double-counting exchanges).</div>
-    </div>
+        .order-stat-content {
+            flex: 1;
+        }
 
-    <div class="ords-row">
-      <a class="ords-btn ords-btn-ghost" href="{{ route('orders.index') }}">
-        <i class="fas fa-arrow-left"></i> Back
-      </a>
+        .order-stat-label {
+            font-size: 13px;
+            color: var(--muted-foreground);
+            margin-bottom: 4px;
+        }
 
-      <a class="ords-btn ords-btn-primary" href="{{ route('returns.wizard', ['order_id' => $order->id]) }}">
-        <i class="fas fa-rotate-left"></i> Return / Exchange
-      </a>
-    </div>
-  </div>
+        .order-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
 
-  <div class="ords-card">
-    <div class="ords-grid">
-      <div class="ords-kv">
-        <div class="ords-k">Customer</div>
-        <div class="ords-v">{{ $order->customer?->name ?? 'Guest' }}</div>
-        <div class="ords-mini">{{ $order->customer?->phone ?? '' }}</div>
-      </div>
+        /* Main Content Grid */
+        .order-content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
 
-      <div class="ords-kv">
-        <div class="ords-k">Status</div>
-        <div class="ords-v"><span class="ords-pill">{{ $order->status ?? '—' }}</span></div>
-        <div class="ords-mini">Created: {{ $order->created_at }}</div>
-      </div>
+        @media (max-width: 1024px) {
+            .order-content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
 
-      <div class="ords-kv">
-        <div class="ords-k">Totals</div>
-        <div class="ords-v">Payable: {{ number_format((float)$order->payable_total, 2) }}</div>
-        <div class="ords-mini">
-          Subtotal: {{ number_format((float)$order->subtotal, 2) }}
-          | Discount: {{ number_format((float)$order->discount_total, 2) }}
-        </div>
-      </div>
+        /* Card Components */
+        .order-card {
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
 
-      <div class="ords-kv">
-        <div class="ords-k">Items Summary</div>
-        <div class="ords-v">{{ $itemsCount }} items</div>
-        <div class="ords-mini">
-          Qty: {{ number_format($totalQty, 4) }}
-          | Returned (includes exchange): {{ number_format($totalReturned, 4) }}
-        </div>
-      </div>
-    </div>
-  </div>
+        .order-card-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--muted);
+        }
 
-  <div class="ords-card">
-    <div class="ords-row" style="margin-bottom:10px;">
-      <div style="flex:1;min-width:240px;">
-        <input class="ords-input" id="ordsItemSearch" placeholder="Search item: name, barcode, product id, batch id, price type..." />
-        <div class="ords-mini" style="margin-top:6px;">Filters only current page (fast).</div>
-      </div>
-      <div style="width:200px;">
-        <input class="ords-input" id="ordsMinQty" type="number" step="0.0001" placeholder="Min qty" />
-      </div>
-      <div style="width:200px;">
-        <input class="ords-input" id="ordsMaxQty" type="number" step="0.0001" placeholder="Max qty" />
-      </div>
-      <button type="button" class="ords-btn ords-btn-ghost" id="ordsClear">
-        <i class="fas fa-eraser"></i> Clear
-      </button>
-      <span class="ords-pill" id="ordsCountPill">{{ $order->items->count() }} items</span>
-    </div>
+        .order-card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-    <div class="ords-tableWrap">
-      <table class="ords-table" id="ordsItemsTable">
-        <thead>
-          <tr>
-            <th>Product</th>
-            <th style="width:120px;">Product ID</th>
-            <th style="width:120px;">Batch ID</th>
-            <th style="width:160px;">Barcode</th>
-            <th style="width:120px;">Price Type</th>
+        .order-card-body {
+            padding: 24px;
+        }
 
-            <th style="width:120px;">Sold</th>
-            <th style="width:120px;">Returned</th>
-            <th style="width:130px;">Net Qty</th>
+        /* Customer Info */
+        .order-customer-info {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
 
-            <th style="width:120px;">Unit</th>
-            <th style="width:120px;">Discount</th>
-            <th style="width:140px;">Net Total</th>
-          </tr>
-        </thead>
+        .order-customer-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--order-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
 
-        <tbody id="ordsItemsBody">
-        @foreach($order->items as $item)
-          @php
-            $sold = (float)($item->quantity ?? 0);
-            $returned = (float)($item->returned_qty ?? 0);
+        .order-customer-details {
+            flex: 1;
+        }
 
-            // ✅ FIX: DO NOT subtract exchangeReturn here
-            $net = max(0, $sold - $returned);
+        .order-customer-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 4px 0;
+        }
 
-            $disc = (float)($item->discount_amount ?? 0);
-            $netTotal = $net * (float)($item->unit_price ?? 0);
+        .order-customer-detail {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted-foreground);
+            font-size: 14px;
+            margin: 4px 0;
+        }
 
-            $rowBadge = 'ok';
-            if($returned > 0 && $net > 0) $rowBadge = 'warn';
-            if($net <= 0 && $sold > 0) $rowBadge = 'bad';
+        .order-customer-detail i {
+            width: 16px;
+        }
 
-            $isExchangeItem = strtolower((string)($item->price_type ?? '')) === 'exchange';
-          @endphp
+        /* Order Items Table */
+        .order-items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
-          <tr class="ords-tr"
-            data-product="{{ strtolower($item->product_name ?? '') }}"
-            data-barcode="{{ strtolower($item->barcode ?? '') }}"
-            data-productid="{{ $item->product_id }}"
-            data-batchid="{{ $item->product_batch_id }}"
-            data-pricetype="{{ strtolower($item->price_type ?? '') }}"
-            data-qty="{{ $sold }}"
-          >
-            <td>
-              <div style="display:flex;align-items:center;gap:10px;">
-                <span class="ords-badge {{ $rowBadge }}"><i class="fas fa-box"></i></span>
-                <div>
-                  @if(Route::has('products.show'))
-                    <a class="ords-link" href="{{ route('products.show', $item->product_id) }}">
-                      {{ $item->product_name ?? ('Product #'.$item->product_id) }}
+        .order-items-table th {
+            text-align: left;
+            padding: 12px 12px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted-foreground);
+            background: var(--muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .order-items-table td {
+            padding: 12px 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .order-items-table tr:hover td {
+            background: var(--muted);
+        }
+
+        .order-item-product {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .order-item-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .order-item-name {
+            font-weight: 500;
+        }
+
+        .order-item-sku {
+            font-size: 12px;
+            color: var(--muted-foreground);
+        }
+
+        .order-item-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .order-item-returned {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .order-item-price {
+            font-weight: 600;
+        }
+
+        .order-total-row td {
+            font-weight: 700;
+            border-top: 2px solid var(--border);
+        }
+
+        /* Timeline */
+        .order-timeline {
+            position: relative;
+            padding-left: 32px;
+        }
+
+        .order-timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .order-timeline-item {
+            position: relative;
+            padding-bottom: 24px;
+        }
+
+        .order-timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .order-timeline-icon {
+            position: absolute;
+            left: -24px;
+            top: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--card);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .order-timeline-icon.created {
+            border-color: var(--order-primary);
+            color: var(--order-primary);
+        }
+
+        .order-timeline-icon.pending {
+            border-color: var(--order-warning);
+            color: var(--order-warning);
+        }
+
+        .order-timeline-icon.completed {
+            border-color: var(--order-success);
+            color: var(--order-success);
+        }
+
+        .order-timeline-icon.paid {
+            border-color: var(--order-info);
+            color: var(--order-info);
+        }
+
+        .order-timeline-icon.refunded {
+            border-color: #8b5cf6;
+            color: #8b5cf6;
+        }
+
+        .order-timeline-icon.returned {
+            border-color: #6d28d9;
+            color: #6d28d9;
+        }
+
+        .order-timeline-icon.cancelled {
+            border-color: var(--order-danger);
+            color: var(--order-danger);
+        }
+
+        .order-timeline-content {
+            padding-top: 4px;
+        }
+
+        .order-timeline-title {
+            font-weight: 600;
+            margin: 0 0 2px 0;
+        }
+
+        .order-timeline-description {
+            font-size: 14px;
+            color: var(--muted-foreground);
+            margin: 0;
+        }
+
+        .order-timeline-time {
+            font-size: 12px;
+            color: var(--muted-foreground);
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .order-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .order-title-section {
+                flex-wrap: wrap;
+            }
+
+            .order-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .order-items-table {
+                font-size: 13px;
+            }
+
+            .order-items-table th,
+            .order-items-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+
+    <div class="order-wrap">
+        <!-- Header -->
+        <div class="order-header">
+            <div class="order-title-section">
+                <h1>
+                    <i class="fas fa-shopping-cart" style="color: var(--order-primary);"></i>
+                    Order #{{ $order->order_no ?? $order->id }}
+                </h1>
+                <span class="order-badge order-badge-{{ $order->status ?? 'pending' }}">
+                    {{ ucfirst($order->status ?? 'Pending') }}
+                </span>
+                <span style="font-size: 14px; color: var(--muted-foreground);">
+                    <i class="far fa-calendar-alt"></i>
+                    {{ $order->created_at->format('M d, Y H:i') }}
+                </span>
+            </div>
+            <div class="order-action-buttons">
+                @if (in_array($order->status, ['pending', 'unpaid']))
+                    <a href="{{ route('orders.edit', $order) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit"></i> Edit
                     </a>
-                  @else
-                    <b>{{ $item->product_name ?? ('Product #'.$item->product_id) }}</b>
-                  @endif
+                @endif
+                @if ((float) ($order->due_total ?? 0) > 0 && in_array($order->status, ['pending', 'processing']))
+                    <a href="{{ route('payments.create', $order) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-money-bill-wave"></i> Add Payment
+                    </a>
+                @endif
+                <a href="{{ route('invoice.show', $order) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                    <i class="fas fa-file-invoice"></i> Invoice
+                </a>
+                <a href="{{ route('orders.print', $order) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                    <i class="fas fa-print"></i> Print
+                </a>
+                <a href="{{ route('orders.index') }}" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
 
-                  <div class="ords-mini">
-                    Order Item ID: {{ $item->id }}
-                    @if($isExchangeItem)
-                      &nbsp;•&nbsp; <span class="ords-tag"><i class="fas fa-shuffle"></i> Exchange Issue</span>
-                    @endif
-                  </div>
+        <!-- Statistics Cards -->
+        <div class="order-stats-grid">
+            <div class="order-stat-card">
+                <div class="order-stat-icon" style="background: #dbeafe; color: #3b82f6;">
+                    <i class="fas fa-shopping-bag"></i>
                 </div>
-              </div>
-            </td>
+                <div class="order-stat-content">
+                    <div class="order-stat-label">Total Items</div>
+                    <div class="order-stat-value">{{ $order->items->sum('quantity') }}</div>
+                </div>
+            </div>
+            <div class="order-stat-card">
+                <div class="order-stat-icon" style="background: #d1fae5; color: #22c55e;">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="order-stat-content">
+                    <div class="order-stat-label">Total Amount</div>
+                    <div class="order-stat-value">tk.{{ number_format($order->payable_total, 2) }}</div>
+                </div>
+            </div>
+            <div class="order-stat-card">
+                <div class="order-stat-icon" style="background: #fef3c7; color: #eab308;">
+                    <i class="fas fa-tag"></i>
+                </div>
+                <div class="order-stat-content">
+                    <div class="order-stat-label">Discount</div>
+                    <div class="order-stat-value">tk.{{ number_format($order->discount_amount ?? 0, 2) }}</div>
+                </div>
+            </div>
+            <div class="order-stat-card">
+                <div class="order-stat-icon" style="background: #f3e8ff; color: #8b5cf6;">
+                    <i class="fas fa-undo-alt"></i>
+                </div>
+                <div class="order-stat-content">
+                    <div class="order-stat-label">Returned</div>
+                    <div class="order-stat-value">{{ $exchangeReturn->sum() ?? 0 }}</div>
+                </div>
+            </div>
+        </div>
 
-            <td><b>{{ $item->product_id }}</b></td>
-            <td><b>{{ $item->product_batch_id }}</b></td>
-            <td class="ords-mini">{{ $item->barcode ?? '—' }}</td>
-            <td>{{ ucfirst($item->price_type ?? '-') }}</td>
 
-            <td><b>{{ number_format($sold, 4) }}</b></td>
-            <td class="ords-mini">{{ number_format($returned, 4) }}</td>
-            <td><b>{{ number_format($net, 4) }}</b></td>
+        {{-- Add this to orders/show.blade.php in the appropriate section --}}
+<div class="d-flex gap-2 flex-wrap mb-3">
+    <!-- Existing buttons -->
 
-            <td>{{ number_format((float)($item->unit_price ?? 0), 2) }}</td>
-            <td class="ords-mini">{{ number_format($disc, 2) }}</td>
-            <td><b>{{ number_format($netTotal, 2) }}</b></td>
-          </tr>
-        @endforeach
-        </tbody>
-      </table>
-    </div>
-  </div>
+
+
+    <style>
+        /* Add these styles to your app.css for better integration */
+
+:root {
+    --split-primary: oklch(0.488 0.243 264.376);
+    --split-success: oklch(0.696 0.17 162.48);
+    --split-warning: oklch(0.769 0.188 70.08);
+    --split-danger: oklch(0.704 0.191 22.216);
+    --split-info: oklch(0.488 0.243 264.376);
+}
+
+/* Currency styling */
+.currency-bdt {
+    font-family: 'Tahoma', 'Arial', sans-serif;
+}
+
+.currency-bdt::before {
+    content: '৳ ';
+}
+
+/* Split animation */
+.split-animate {
+    animation: splitPulse 0.6s ease-in-out;
+}
+
+@keyframes splitPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); background: var(--split-primary); }
+    100% { transform: scale(1); }
+}
+
+/* Child order badge */
+.child-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--split-info);
+    color: white;
+}
+
+.child-badge::before {
+    content: '🔀';
+    font-size: 10px;
+}
+
+/* Split summary cards */
+.split-summary-card {
+    background: var(--secondary);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+}
+
+.split-summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.split-summary-card .label {
+    font-size: 11px;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.split-summary-card .value {
+    font-size: 18px;
+    font-weight: 900;
+    margin-top: 4px;
+}
+    </style>
+
+    @if(!in_array($order->status, ['cancelled', 'merged']) && $order->items->isNotEmpty())
+        <a href="{{ route('returns.wizard', ['order_id' => $order->id]) }}" class="btnx btnx-secondary">
+            <i class="fas fa-undo-alt"></i> Return Items
+        </a>
+        <a href="{{ route('exchanges.create') }}" class="btnx btnx-secondary">
+            <i class="fas fa-exchange-alt"></i> Exchange Items
+        </a>
+    @endif
+
+    @if($order->status === 'pending')
+        <form action="{{ route('orders.process', $order) }}" method="POST" style="display: inline;">
+            @csrf
+            <button type="submit" class="btnx btnx-info">
+                <i class="fas fa-play"></i> Start Processing
+            </button>
+        </form>
+    @endif
+
+    @if(in_array($order->status, ['pending', 'processing']))
+        <a href="{{ route('orders.cancel.form', $order) }}" class="btnx btnx-danger">
+            <i class="fas fa-times"></i> Cancel Order
+        </a>
+    @endif
+
+    @if($order->status === 'processing')
+        <form action="{{ route('orders.complete', $order) }}" method="POST" style="display: inline;">
+            @csrf
+            <button type="submit" class="btnx btnx-success">
+                <i class="fas fa-check"></i> Mark Completed
+            </button>
+        </form>
+    @endif
+
+    @if(in_array($order->status, ['completed', 'paid']))
+        <form action="{{ route('orders.refund', $order) }}" method="POST" style="display: inline;"
+              onsubmit="return confirm('Refund this order? Stock will be restored and captured payments marked refunded.');">
+            @csrf
+            <button type="submit" class="btnx btnx-danger">
+                <i class="fas fa-undo"></i> Refund Order
+            </button>
+        </form>
+    @endif
+
+    @if($order->canSplit())
+        <a href="{{ route('orders.split', $order) }}" class="btnx btnx-warning">
+            <i class="fas fa-code-branch"></i> Split Order
+        </a>
+    @endif
+
+    @if($order->isSplitParent())
+        <a href="{{ route('orders.split.history', $order) }}" class="btnx btnx-info">
+            <i class="fas fa-history"></i> Split History
+        </a>
+    @endif
+
+    @if($order->isSplitChild() && $order->parentOrder)
+        <a href="{{ route('orders.show', $order->parentOrder) }}" class="btnx btnx-secondary">
+            <i class="fas fa-arrow-up"></i> View Parent Order
+        </a>
+    @endif
 </div>
 
-<script>
-(() => {
-  const searchEl = document.getElementById('ordsItemSearch');
-  const minQtyEl = document.getElementById('ordsMinQty');
-  const maxQtyEl = document.getElementById('ordsMaxQty');
-  const clearBtn = document.getElementById('ordsClear');
-  const pill = document.getElementById('ordsCountPill');
-  const rows = Array.from(document.querySelectorAll('#ordsItemsBody tr'));
+@if($order->childOrders()->count() > 0)
+    <div class="cardx mb-3">
+        <div class="cardx-hd">
+            <span class="fw-bold">Child Orders</span>
+            <span class="badgex badgex-info">{{ $order->childOrders()->count() }} child(s)</span>
+        </div>
+        <div class="cardx-body p-0">
+            <div style="overflow-x: auto;">
+                <table class="tablex">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Status</th>
+                            <th class="text-right">Amount</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($order->childOrders()->where('split_status', 'split_child')->get() as $child)
+                            <tr>
+                                <td>
+                                    <a href="{{ route('orders.show', $child) }}" style="color: var(--primary);">
+                                        #{{ $child->order_no }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badgex {{ $child->status === 'completed' ? 'badgex-success' : ($child->status === 'cancelled' ? 'badgex-danger' : 'badgex-warning') }}">
+                                        {{ ucfirst($child->status) }}
+                                    </span>
+                                </td>
+                                <td class="text-right">{{ currency_bdt($child->payable_total) }}</td>
+                                <td>{{ $child->created_at->format('Y-m-d H:i') }}</td>
+                                <td>
+                                    <a href="{{ route('orders.show', $child) }}" class="btnx btnx-primary btnx-sm">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+@endif
 
-  const debounce = (fn, d=160) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), d);} };
+        <!-- Main Content -->
+        <div class="order-content-grid">
+            <!-- Left Column -->
+            <div>
+                <!-- Customer Information -->
+                <div class="order-card">
+                    <div class="order-card-header">
+                        <h3><i class="fas fa-user" style="color: var(--order-primary);"></i> Customer Information</h3>
+                    </div>
+                    <div class="order-card-body">
+                        <div class="order-customer-info">
+                            <div class="order-customer-avatar">
+                                {{ $order->customer?->name ? strtoupper(substr($order->customer->name, 0, 1)) : 'G' }}
+                            </div>
+                            <div class="order-customer-details">
+                                <p class="order-customer-name">{{ $order->customer?->name ?? 'Guest Customer' }}</p>
+                                @if ($order->customer)
+                                    <div class="order-customer-detail">
+                                        <i class="fas fa-phone"></i>
+                                        {{ $order->customer->phone ?? 'N/A' }}
+                                    </div>
+                                    <div class="order-customer-detail">
+                                        <i class="fas fa-envelope"></i>
+                                        {{ $order->customer->email ?? 'N/A' }}
+                                    </div>
+                                    @if ($order->customer->address)
+                                        <div class="order-customer-detail">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            {{ $order->customer->address }}
+                                        </div>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-  function apply(){
-    const q = (searchEl.value || '').trim().toLowerCase();
-    const minQty = minQtyEl.value === '' ? null : Number(minQtyEl.value);
-    const maxQty = maxQtyEl.value === '' ? null : Number(maxQtyEl.value);
+                <!-- Order Items -->
+                <div class="order-card">
+                    <div class="order-card-header">
+                        <h3><i class="fas fa-boxes" style="color: var(--order-primary);"></i> Order Items</h3>
+                        <span style="font-size: 14px; color: var(--muted-foreground);">
+                            {{ $order->items->count() }} items
+                        </span>
+                    </div>
+                    <div class="order-card-body" style="padding: 0;">
+                        <table class="order-items-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-right">Qty</th>
+                                    <th class="text-right">Price</th>
+                                    <th>Returned</th>
+                                    <th class="text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($order->items as $item)
+                                    <tr>
+                                        <td>
+                                            <div class="order-item-product">
+                                                <div class="order-item-icon" style="background: #e0e7ff; color: #4338ca;">
+                                                    <i class="fas fa-cube"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="order-item-name">{{ $item->product_name }}</div>
+                                                    <div class="order-item-sku">
+                                                        SKU: {{ $item->barcode ?? 'N/A' }}
+                                                        @if ($item->product_batch_id)
+                                                            <span style="margin-left: 8px;">Batch:
+                                                                #{{ $item->product_batch_id }}</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-right">{{ $item->quantity }}</td>
+                                        <td class="order-item-price text-right">tk.{{ number_format($item->unit_price, 2) }}</td>
+                                        <td>
+                                            @if (isset($exchangeReturn[$item->id]))
+                                                <span class="order-item-badge order-item-returned">
+                                                    {{ $exchangeReturn[$item->id] }} returned
+                                                </span>
+                                            @else
+                                                <span style="color: var(--muted-foreground); font-size: 13px;">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="order-item-price text-right">tk.{{ number_format($item->total_price, 2) }}</td>
+                                    </tr>
+                                @endforeach
+                                <tr class="order-total-row">
+                                    <td colspan="4" style="text-align: right;">Subtotal</td>
+                                    <td class="text-right">tk.{{ number_format($order->items->sum('total_price'), 2) }}</td>
+                                </tr>
+                                @if (($order->discount_amount ?? 0) > 0)
+                                    <tr>
+                                        <td colspan="4" style="text-align: right; color: var(--order-danger);">
+                                            <i class="fas fa-tag"></i> Discount
+                                        </td>
+                                        <td class="text-right" style="color: var(--order-danger);">
+                                            -tk.{{ number_format($order->discount_amount, 2) }}</td>
+                                    </tr>
+                                @endif
+                                <tr class="order-total-row">
+                                    <td colspan="4" style="text-align: right; font-size: 16px;">Grand Total</td>
+                                    <td class="text-right" style="font-size: 18px; color: var(--order-primary);">
+                                        tk.{{ number_format($order->payable_total, 2) }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-    let shown = 0;
+            <!-- Right Column -->
+            <div>
+                <!-- Order Timeline -->
+                <div class="order-card">
+                    <div class="order-card-header">
+                        <h3><i class="fas fa-clock" style="color: var(--order-primary);"></i> Order Timeline</h3>
+                    </div>
+                    <div class="order-card-body">
+                        <div class="order-timeline">
+                            @foreach ($timeline as $event)
+                                <div class="order-timeline-item">
+                                    <div class="order-timeline-icon {{ $event['type'] }}">
+                                        <i class="fas fa-{{ $event['icon'] }}"></i>
+                                    </div>
+                                    <div class="order-timeline-content">
+                                        <p class="order-timeline-title">{{ $event['title'] }}</p>
+                                        <p class="order-timeline-description">{{ $event['description'] }}</p>
+                                        <span class="order-timeline-time">
+                                            <i class="far fa-clock"></i>
+                                            {{ $event['time']->diffForHumans() }}
+                                            ({{ $event['time']->format('M d, Y H:i') }})
+                                        </span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
 
-    rows.forEach(tr => {
-      const txt = [
-        tr.dataset.product, tr.dataset.barcode, tr.dataset.pricetype,
-        tr.dataset.productid, tr.dataset.batchid
-      ].join(' ');
-      const qty = Number(tr.dataset.qty || 0);
+                <!-- Exchange Information -->
+                @if ($exchangeIssue->isNotEmpty())
+                    <div class="order-card">
+                        <div class="order-card-header">
+                            <h3><i class="fas fa-exchange-alt" style="color: var(--order-info);"></i> Exchange Information
+                            </h3>
+                        </div>
+                        <div class="order-card-body">
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div style="font-size: 14px; color: var(--muted-foreground);">
+                                    <i class="fas fa-arrow-right" style="color: var(--order-success);"></i>
+                                    Issues: {{ $exchangeIssue->count() }} items
+                                </div>
+                                @foreach ($exchangeIssue as $issue)
+                                    <div
+                                        style="display: flex; justify-content: space-between; padding: 8px; background: var(--muted); border-radius: 6px;">
+                                        <span>Product #{{ $issue->product_id }}</span>
+                                        <span>{{ $issue->qty }} × tk.{{ number_format($issue->unit_price, 2) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
-      const matchQ = !q || txt.includes(q);
-      const matchMin = (minQty === null) || qty >= minQty;
-      const matchMax = (maxQty === null) || qty <= maxQty;
+                <!-- Order Notes -->
+                @if ($order->note)
+                    <div class="order-card">
+                        <div class="order-card-header">
+                            <h3><i class="fas fa-sticky-note" style="color: var(--order-warning);"></i> Order Notes</h3>
+                        </div>
+                        <div class="order-card-body">
+                            <p style="margin: 0; color: var(--foreground);">{{ $order->note }}</p>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
 
-      const ok = matchQ && matchMin && matchMax;
-      tr.style.display = ok ? '' : 'none';
-      if(ok) shown++;
-    });
-
-    pill.textContent = `${shown} items shown`;
-  }
-
-  const run = debounce(apply, 140);
-  searchEl.addEventListener('input', run);
-  minQtyEl.addEventListener('input', run);
-  maxQtyEl.addEventListener('input', run);
-
-  clearBtn.addEventListener('click', () => {
-    searchEl.value = '';
-    minQtyEl.value = '';
-    maxQtyEl.value = '';
-    apply();
-  });
-
-  apply();
-})();
-</script>
-
+    <script>
+        // Auto-print functionality (optional)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add any JavaScript enhancements here
+            console.log('Order information loaded successfully');
+        });
+    </script>
 @endsection

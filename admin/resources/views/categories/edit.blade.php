@@ -13,7 +13,7 @@
         @method('PUT')
 
         {{-- Form Card --}}
-        <div class="form-card glass-effect animate-pop-in">
+        <div class="form-card glass-effect animate-pop-in" data-reveal>
             {{-- Barcode Section --}}
             <div class="form-section">
                 <div class="form-label-group">
@@ -127,7 +127,7 @@
                     <label class="form-label">Category Hierarchy</label>
                     <span class="form-label-hint">Current structure</span>
                 </div>
-                <div class="tree-container animate-fade-in-delay">
+                <div class="tree-container animate-fade-in-delay" data-reveal>
                     <div class="tree-header">
                         <div class="tree-info">
                             <svg viewBox="0 0 24 24">
@@ -259,7 +259,7 @@
         </div>
 
         {{-- Action Buttons --}}
-        <div class="form-actions animate-fade-in-delay">
+        <div class="form-actions animate-fade-in-delay" data-reveal>
             <a href="{{ route('categories.index') }}" class="btn-secondary">
                 <svg viewBox="0 0 24 24">
                     <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
@@ -399,7 +399,7 @@
 }
 
 .animate-slide-in-right {
-    animation: slideInRight 0.3s ease-out;
+    animation: slideInRight var(--transition-normal) ease-out;
 }
 
 
@@ -480,7 +480,7 @@
     color: var(--text-muted);
     background: var(--bg-tertiary);
     padding: 0.25rem 0.75rem;
-    border-radius: 12px;
+    border-radius: var(--radius);
 }
 
 /* Input Styles */
@@ -540,7 +540,7 @@
     background: none;
     border: none;
     padding: 0.5rem;
-    border-radius: 6px;
+    border-radius: calc(var(--radius) - 2px);
     cursor: pointer;
     color: var(--text-secondary);
     transition: all var(--transition-fast);
@@ -765,7 +765,7 @@
     color: var(--text-secondary);
     cursor: pointer;
     padding: 0.5rem;
-    border-radius: 4px;
+    border-radius: calc(var(--radius) - 2px);
     transition: all var(--transition-fast);
 }
 
@@ -885,7 +885,7 @@
     padding: 0.25rem 0.75rem;
     background: var(--accent-color);
     color: var(--primary-foreground);
-    border-radius: 12px;
+    border-radius: var(--radius);
     font-size: 0.75rem;
     font-weight: 600;
 }
@@ -903,7 +903,7 @@
 
 .current-image {
     margin-bottom: 1.5rem;
-    animation: slideUp 0.3s ease-out;
+    animation: slideUp var(--transition-normal) ease-out;
 }
 
 .image-preview {

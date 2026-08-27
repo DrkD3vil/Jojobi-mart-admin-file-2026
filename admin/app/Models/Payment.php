@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTimeline;
 use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 
 {
+    use HasTimeline;
+
     protected $fillable = [
         'order_id','channel','method','trx_id','account_label','amount','status','meta'
     ];

@@ -21,3 +21,14 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# secrets / keys — never commit real values
+.env
+new_connection
+*.pem
+id_rsa*
+id_ed25519*
+id_ecdsa*
+
+# macOS AppleDouble junk
+._*

@@ -12,6 +12,9 @@ class StoreExchangeRequest extends FormRequest
             'order_id' => ['required','integer','exists:orders,id'],
             'location_id' => ['required','integer','exists:locations,id'],
             'note' => ['nullable','string'],
+            // Hidden field generated once per page load; lets ExchangeController::store()
+            // catch a double form submission instead of posting a duplicate exchange.
+            'idempotency_key' => ['nullable','string','max:100'],
 
             // RETURN lines
             'return_lines' => ['required','array','min:1'],

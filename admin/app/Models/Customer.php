@@ -10,9 +10,16 @@ use Illuminate\Support\Str;
 class Customer extends Model
 {
     //
+    // NOTE: due_balance, advance_balance, and reward_points are intentionally
+    // NOT mass-assignable. They must only ever move through the ledger
+    // methods (CustomerController::postBalance/postRewards), which write an
+    // audit row and then set the attribute directly (bypassing $fillable,
+    // which is fine for direct property assignment). Keeping them out of
+    // $fillable prevents a future Customer::create($request->all()) /
+    // ->update($request->all()) from letting a caller set an arbitrary
+    // balance with no ledger entry to back it.
     protected $fillable = [
         'uuid','name','phone','email','type','is_active','address','notes',
-        'due_balance','advance_balance','reward_points',
     ];
 
     protected $casts = [

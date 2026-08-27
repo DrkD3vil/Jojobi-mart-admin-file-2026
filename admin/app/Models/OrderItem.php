@@ -22,7 +22,10 @@ class OrderItem extends Model
         'total_price',
         'returned_qty',
         'returned_amount',
-        'note'
+        'note',
+        'is_gift',
+        'gift_source',
+        'gift_source_id',
     ];
 
     protected $casts = [
@@ -32,6 +35,7 @@ class OrderItem extends Model
          'returned_qty' => 'decimal:4',
          'returned_amount' => 'decimal:4',
         'note' => 'array',
+        'is_gift' => 'boolean',
     ];
 
 

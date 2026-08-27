@@ -342,7 +342,7 @@
         top: .18rem;
         left: .18rem;
         transition: transform var(--transition-normal, 250ms) ease;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, .15);
+        box-shadow: var(--card-shadow-hover, 0 6px 16px rgba(0, 0, 0, .15));
     }
 
     .toggle-input:checked+.toggle-label .toggle-track {
@@ -912,7 +912,7 @@
 @endif
 
 <div class="product-form-container" data-pf-root>
-    <div class="form-card glass-effect">
+    <div class="form-card glass-effect" data-reveal>
 
         {{-- Tabs --}}
         <div class="form-tabs" role="tablist" aria-label="Product form tabs">
@@ -1554,7 +1554,7 @@
                 #pf_stock_management .st-icon:hover {
                     transform: translateY(-1px);
                     border-color: var(--st-accent);
-                    box-shadow: 0 16px 36px rgba(0, 0, 0, .12);
+                    box-shadow: var(--card-shadow-hover, 0 16px 36px rgba(0, 0, 0, .12));
                 }
 
                 #pf_stock_management .st-icon.edit:hover {
@@ -1853,11 +1853,11 @@
                                 <thead>
                                     <tr>
                                         <th>Batch</th>
-                                        <th>Buy</th>
-                                        <th>Original</th>
-                                        <th>Discount</th>
-                                        <th>Sell</th>
-                                        <th>Qty</th>
+                                        <th class="text-right">Buy</th>
+                                        <th class="text-right">Original</th>
+                                        <th class="text-right">Discount</th>
+                                        <th class="text-right">Sell</th>
+                                        <th class="text-right">Qty</th>
                                         <th>Expiry</th>
                                         <th style="width:140px;">Actions</th>
                                     </tr>
@@ -1899,19 +1899,19 @@
                                                 </div>
                                             </td>
 
-                                            <td data-label="Buy" class="st-mono">
+                                            <td data-label="Buy" class="st-mono text-right">
                                                 {{ number_format((float) $b->buy_price, 2) }} tk</td>
-                                            <td data-label="Original" class="st-mono">
+                                            <td data-label="Original" class="st-mono text-right">
                                                 {{ number_format((float) $b->original_sell_price, 2) }} tk</td>
-                                            <td data-label="Discount" class="st-mono">{{ $discountLabel }}</td>
+                                            <td data-label="Discount" class="st-mono text-right">{{ $discountLabel }}</td>
 
-                                            <td data-label="Sell">
+                                            <td data-label="Sell" class="text-right">
                                                 <strong
                                                     class="st-price st-mono">{{ number_format((float) $b->sell_price, 2) }}
                                                     tk</strong>
                                             </td>
 
-                                            <td data-label="Qty"> <span class="st-pill {{ $low ? 'danger' : 'ok' }}">
+                                            <td data-label="Qty" class="text-right"> <span class="st-pill {{ $low ? 'danger' : 'ok' }}">
                                                     <span class="st-dot"></span> <span
                                                         class="st-mono">{{ number_format($stock[$b->id] ?? 0, 4) ?? 'Null' }}</span>
                                                     <span class="st-muted"
@@ -2433,7 +2433,7 @@
                 #pf_product_status .ps-btn.ghost:hover {
                     transform: translateY(-1px);
                     border-color: var(--ps-accent);
-                    box-shadow: 0 16px 36px rgba(0, 0, 0, .10);
+                    box-shadow: var(--card-shadow-hover, 0 16px 36px rgba(0, 0, 0, .10));
                 }
 
                 /* toolbar */
@@ -2598,7 +2598,7 @@
                 #pf_product_status .ps-iconbtn:hover {
                     transform: translateY(-1px);
                     border-color: var(--ps-accent);
-                    box-shadow: 0 14px 28px rgba(0, 0, 0, .12);
+                    box-shadow: var(--card-shadow-hover, 0 14px 28px rgba(0, 0, 0, .12));
                 }
 
                 #pf_product_status .ps-iconbtn svg {

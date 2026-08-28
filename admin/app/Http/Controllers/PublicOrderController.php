@@ -20,6 +20,8 @@ class PublicOrderController extends Controller
             'payments:id,order_id,channel,method,amount,created_at',
         ]);
 
-        return view('public.order', compact('order'));
+        $timeline = $order->timeline()->oldest('id')->get();
+
+        return view('public.order', compact('order', 'timeline'));
     }
 }

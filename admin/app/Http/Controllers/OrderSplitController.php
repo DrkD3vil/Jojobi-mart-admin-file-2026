@@ -239,6 +239,7 @@ class OrderSplitController extends Controller
             'session_id' => session()->getId(),
             'customer_id' => $parentOrder->customer_id,
             'location_id' => $parentOrder->location_id,
+            'channel' => $parentOrder->channel,
             'parent_order_id' => $parentOrder->id,
             'original_order_id' => $parentOrder->original_order_id ?? $parentOrder->id,
             'split_reason' => $request->split_reason ?? 'Manual split',

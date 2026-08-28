@@ -1333,8 +1333,67 @@ class OrderController extends Controller
             $order->update(['status' => 'completed']);
             $order->recordTimeline('completed', 'Order Completed', null, 'processing', 'completed', 'badge-check');
 
+            $this->awardOnlineEarnPoints($order);
+
             return redirect()->back()->with('success', 'Order completed.');
         });
+    }
+
+    /**
+     * Online orders don't earn reward points at checkout time the way a POS
+     * sale does in CartController::checkout() -- "paid" for an online order
+     * just means the trx_id has been verified, not that the order is done,
+     * so earning is deferred to here instead. Must run inside the caller's
+     * already-locked-order transaction. Guarded by an existing
+     * action=earn/ref_type=order/ref_id=$order->id ledger row so completing
+     * (or re-completing) the same order can never double-award points --
+     * completing an already-completed order is already blocked above, but
+     * this keeps the guard independent of that in case this method is ever
+     * called from elsewhere.
+     */
+    private function awardOnlineEarnPoints(Order $order): void
+    {
+        if ($order->channel !== 'online' || $order->payment_status !== 'paid' || !$order->customer_id) {
+            return;
+        }
+
+        $alreadyEarned = CustomerRewardLedger::where('ref_type', 'order')
+            ->where('ref_id', $order->id)
+            ->where('action', 'earn')
+            ->exists();
+
+        if ($alreadyEarned) {
+            return;
+        }
+
+        $basis = min((float) $order->paid_total, (float) $order->payable_total);
+        $earnPoints = (float) floor($basis * self::EARN_RATE);
+
+        if ($earnPoints <= 0) {
+            return;
+        }
+
+        $customer = Customer::whereKey($order->customer_id)->lockForUpdate()->first();
+        if (!$customer) {
+            return;
+        }
+
+        $customer->reward_points = (float) $customer->reward_points + $earnPoints;
+        $customer->save();
+
+        CustomerRewardLedger::create([
+            'customer_id' => $customer->id,
+            'action' => 'earn',
+            'direction' => 'add',
+            'points' => $earnPoints,
+            'ref_type' => 'order',
+            'ref_id' => $order->id,
+            'channel' => 'online',
+            'terminal_id' => null,
+            'created_by' => Auth::id(),
+            'idempotency_key' => null,
+            'note' => "Earned on completed online order ({$order->order_no})",
+        ]);
     }
 
     public function refund(Order $order)
@@ -1964,6 +2023,7 @@ class OrderController extends Controller
                 'session_id' => $cart->session_id,
                 'customer_id' => $cart->customer_id,
                 'location_id' => $locationId,
+                'channel' => 'pos',
                 'subtotal' => $cartTotal,
                 'discount_total' => $discountTotal,
                 'payable_total' => $netCollect,

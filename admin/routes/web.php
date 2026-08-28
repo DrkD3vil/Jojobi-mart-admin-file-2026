@@ -33,6 +33,8 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\PublicOrderController;
+use App\Http\Controllers\Ecommerce\EcommerceOrderController;
+use App\Http\Controllers\Report\EcommerceDashboardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -47,6 +49,19 @@ use Illuminate\Support\Facades\Route;
 Route::get('/order-status/{order}', [PublicOrderController::class, 'show'])
     ->name('public.order.show')
     ->middleware('signed');
+
+/*
+|--------------------------------------------------------------------------
+| Retired Storefront (no login)
+|--------------------------------------------------------------------------
+| The guest storefront that used to live here moved to the standalone
+| frontend/ app, which now has its own guest checkout (see CheckoutController
+| + CustomerMatcher there). Anything still hitting an old /shop link -- a
+| bookmark, a stale QR code -- gets bounced over there instead of a 404.
+*/
+Route::get('/shop/{any?}', function () {
+    return redirect(env('FRONTEND_URL', 'http://localhost:8000'), 301);
+})->where('any', '.*');
 
 /*
 |--------------------------------------------------------------------------
@@ -503,10 +518,10 @@ Route::group(['defaults' => ['access_key' => 'orders']], function () {
     Route::get('/orders/status/cancelled', [OrderController::class, 'cancelled'])->name('orders.cancelled');
 
     // ===== ORDER ACTION ROUTES =====
-    Route::post('/orders/{id}/process', [OrderController::class, 'process'])->name('orders.process');
-    Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
-    Route::post('/orders/{id}/complete', [OrderController::class, 'complete'])->name('orders.complete');
-    Route::post('/orders/{id}/refund', [OrderController::class, 'refund'])->name('orders.refund');
+    Route::post('/orders/{order}/process', [OrderController::class, 'process'])->name('orders.process');
+    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/orders/{order}/complete', [OrderController::class, 'complete'])->name('orders.complete');
+    Route::post('/orders/{order}/refund', [OrderController::class, 'refund'])->name('orders.refund');
 
     // Cancel gets a real confirmation page (order summary + optional reason)
     // instead of an instant one-click POST.
@@ -535,6 +550,25 @@ Route::group(['defaults' => ['access_key' => 'orders']], function () {
     // ===== INVOICE ROUTE =====
     Route::get('/invoice/{order}', [InvoiceController::class, 'show'])->name('invoice.show');
     Route::get('/invoice/{order}/print', [InvoiceController::class, 'print'])->name('invoice.print');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Ecommerce (admin side: queue + dashboard for channel=online orders)
+|--------------------------------------------------------------------------
+| Status changes (process/complete/cancel) reuse the 'orders' routes above.
+*/
+Route::group(['defaults' => ['access_key' => 'ecommerce']], function () {
+    // Registered before /ecommerce/orders/{order}/... below so "queue" is
+    // never captured as an {order} route parameter.
+    Route::get('/ecommerce/orders/queue', [EcommerceOrderController::class, 'queue'])->name('ecommerce.orders.queue');
+
+    Route::get('/ecommerce/orders', [EcommerceOrderController::class, 'index'])->name('ecommerce.orders.index');
+    Route::post('/ecommerce/orders/{order}/package', [EcommerceOrderController::class, 'package'])->name('ecommerce.orders.package');
+
+    Route::get('/ecommerce/dashboard', [EcommerceDashboardController::class, 'index'])->name('ecommerce.dashboard');
+    Route::get('/ecommerce/dashboard/metrics', [EcommerceDashboardController::class, 'metrics'])->name('ecommerce.dashboard.metrics');
+    Route::get('/ecommerce/dashboard/charts', [EcommerceDashboardController::class, 'charts'])->name('ecommerce.dashboard.charts');
 });
 
 

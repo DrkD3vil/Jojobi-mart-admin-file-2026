@@ -31,6 +31,7 @@ class AccessKeys
             'gift_audit' => 'Gift Audit',
             'customers' => 'Customers',
             'orders' => 'Orders',
+            'ecommerce' => 'Ecommerce Orders',
             'locations' => 'Locations',
             'returns' => 'Returns',
             'stock' => 'Stock Management',

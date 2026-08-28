@@ -49,6 +49,18 @@
         .item-row { display: flex; justify-content: space-between; font-size: 13px; color: #444; }
 
         .footer { margin-top: 16px; text-align: center; font-size: 12.5px; color: #6b7280; }
+
+        .tl { display: flex; flex-direction: column; gap: 0; }
+        .tl-row { display: flex; gap: 10px; }
+        .tl-rail { display: flex; flex-direction: column; align-items: center; }
+        .tl-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd0d6; margin-top: 3px; flex-shrink: 0; }
+        .tl-row:first-child .tl-dot { background: #1d4fa3; }
+        .tl-line { width: 2px; flex: 1; background: #e2e4e8; margin: 2px 0; }
+        .tl-row:last-child .tl-line { display: none; }
+        .tl-body { padding-bottom: 14px; flex: 1; }
+        .tl-title { font-weight: 700; font-size: 13.5px; }
+        .tl-desc { font-size: 12.5px; color: #6b7280; margin-top: 2px; }
+        .tl-time { font-size: 11px; color: #9aa1ab; margin-top: 3px; }
     </style>
 </head>
 <body>
@@ -102,6 +114,27 @@
             <div class="kv"><span>Paid</span><b>{{ format_currency($order->paid_total) }}</b></div>
             @if($order->due_total > 0)
                 <div class="kv"><span>Balance Due</span><b>{{ format_currency($order->due_total) }}</b></div>
+            @endif
+
+            @if($timeline->isNotEmpty())
+                <div class="section-title">Order Timeline</div>
+                <div class="tl">
+                    @foreach($timeline as $event)
+                        <div class="tl-row">
+                            <div class="tl-rail">
+                                <div class="tl-dot"></div>
+                                <div class="tl-line"></div>
+                            </div>
+                            <div class="tl-body">
+                                <div class="tl-title">{{ $event->title }}</div>
+                                @if($event->description)
+                                    <div class="tl-desc">{{ $event->description }}</div>
+                                @endif
+                                <div class="tl-time">{{ $event->created_at->format('d M Y, h:i A') }}</div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             @endif
 
             <div class="footer">{{ $footerNote }}</div>

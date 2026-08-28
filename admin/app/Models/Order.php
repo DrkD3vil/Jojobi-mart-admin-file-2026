@@ -20,6 +20,13 @@ class Order extends Model
         'customer_id',
         'location_id',
 
+        // Sales channel
+        'channel',
+        'shipping_name',
+        'shipping_phone',
+        'shipping_address',
+        'shipping_note',
+
         // Split order fields
         'parent_order_id',
         'split_reason',
@@ -48,6 +55,10 @@ class Order extends Model
         // Order status
         'status',
 
+        // Fulfillment
+        'packaged_at',
+        'packaged_by',
+
         // Trash management
         'deleted_by',
         'delete_reason',
@@ -75,6 +86,7 @@ class Order extends Model
         'deleted_at'    => 'datetime',
         'created_at'    => 'datetime',
         'updated_at'    => 'datetime',
+        'packaged_at'   => 'datetime',
     ];
 
     /*
@@ -106,6 +118,11 @@ class Order extends Model
     public function deletedBy()
     {
         return $this->belongsTo(User::class, 'deleted_by');
+    }
+
+    public function packagedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'packaged_by');
     }
 
     public function parentOrder()
@@ -205,6 +222,11 @@ class Order extends Model
     public function isTrashed()
     {
         return $this->trashed();
+    }
+
+    public function isPackaged(): bool
+    {
+        return !is_null($this->packaged_at);
     }
 
     /*
@@ -346,6 +368,23 @@ class Order extends Model
     public function scopeSubOrders($query)
     {
         return $query->where('is_split_child', true);
+    }
+
+    public function scopeOnlineChannel($query)
+    {
+        return $query->where('channel', 'online');
+    }
+
+    /**
+     * Online orders that have been marked processing but not yet packaged --
+     * the staff fulfillment queue (see EcommerceOrderController::queue()).
+     */
+    public function scopeAwaitingPackaging($query)
+    {
+        return $query
+            ->where('channel', 'online')
+            ->where('status', 'processing')
+            ->whereNull('packaged_at');
     }
 
     /*

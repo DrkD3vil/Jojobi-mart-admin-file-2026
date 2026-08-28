@@ -131,6 +131,73 @@
 
     </div>
 
+    <!-- Ecommerce -->
+    <div class="dropdown">
+
+        <div class="nav-link dropdown-toggle" role="button" tabindex="0" aria-expanded="false"
+            data-tooltip="Ecommerce">
+
+            <i data-lucide="globe" class="w-5 h-5"></i>
+
+            <span class="nav-text ml-3">
+                Ecommerce
+            </span>
+
+            @php
+                $ecoPending = \App\Models\Order::onlineChannel()->where('status', 'pending')->count();
+            @endphp
+            @if($ecoPending > 0)
+                <span class="ml-auto text-xs bg-yellow-500/20 text-yellow-600 px-2 py-0.5 rounded-full">
+                    {{ $ecoPending }}
+                </span>
+            @endif
+
+            <i data-lucide="chevron-down" class="dropdown-chevron w-4 h-4 ml-auto"></i>
+
+        </div>
+
+        <div class="dropdown-content">
+
+            <a href="{{ env('FRONTEND_URL', 'http://localhost:8000') }}" target="_blank"
+                class="nav-link flex items-center">
+                <i data-lucide="store" class="w-4 h-4 mr-3"></i>
+                <span>View Storefront</span>
+                <i data-lucide="external-link" class="w-3.5 h-3.5 ml-auto text-[var(--muted-foreground)]"></i>
+            </a>
+
+            <a href="{{ route('ecommerce.orders.index') }}"
+                class="nav-link flex items-center {{ request()->routeIs('ecommerce.orders.index') ? 'active' : '' }}">
+                <i data-lucide="clipboard-list" class="w-4 h-4 mr-3"></i>
+                <span>Online Orders</span>
+                <span class="ml-auto text-xs text-[var(--muted-foreground)]">
+                    {{ \App\Models\Order::onlineChannel()->count() }}
+                </span>
+            </a>
+
+            @php
+                $ecoQueueCount = \App\Models\Order::awaitingPackaging()->count();
+            @endphp
+            <a href="{{ route('ecommerce.orders.queue') }}"
+                class="nav-link flex items-center {{ request()->routeIs('ecommerce.orders.queue') ? 'active' : '' }}">
+                <i data-lucide="list-checks" class="w-4 h-4 mr-3"></i>
+                <span>Pick Queue</span>
+                @if($ecoQueueCount > 0)
+                    <span class="ml-auto text-xs bg-yellow-500/20 text-yellow-600 px-2 py-0.5 rounded-full">
+                        {{ $ecoQueueCount }}
+                    </span>
+                @endif
+            </a>
+
+            <a href="{{ route('ecommerce.dashboard') }}"
+                class="nav-link flex items-center {{ request()->routeIs('ecommerce.dashboard') ? 'active' : '' }}">
+                <i data-lucide="chart-line" class="w-4 h-4 mr-3"></i>
+                <span>Dashboard</span>
+            </a>
+
+        </div>
+
+    </div>
+
 
     <a href="{{ route('expenses.index') }}"
         class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}" data-tooltip="Expenses">
